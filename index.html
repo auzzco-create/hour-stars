@@ -1,0 +1,2767 @@
+<!DOCTYPE html>
+<!-- Hour-Stars single-file build — open directly in a browser. Source: app/ -->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Hour-Stars — Egyptian Sky School & Decan Passport. Learn the 36 hour-stars, find your birth decade, and practice with honest reconstruction." />
+  <title>Hour-Stars · Egyptian Horoscope & Sky School</title>
+  <style>
+/* Hour-Stars — Egyptian Horoscope & Sky School */
+:root {
+  --bg: #070b16;
+  --bg-elev: #0e1528;
+  --bg-card: rgba(16, 24, 48, 0.72);
+  --bg-card-solid: #121a32;
+  --line: rgba(212, 175, 55, 0.22);
+  --line-soft: rgba(255, 255, 255, 0.08);
+  --gold: #d4af37;
+  --gold-soft: #e8d48b;
+  --gold-dim: #8a7030;
+  --text: #e8ecf7;
+  --muted: #9aa3bf;
+  --accent: #7eb6ff;
+  --akhet: #5b9fd4;
+  --peret: #6bbf8a;
+  --shemu: #e0a35a;
+  --epag: #c084fc;
+  --danger: #f07178;
+  --ok: #7dcea0;
+  --radius: 18px;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --serif: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(80, 120, 220, 0.18), transparent 55%),
+    radial-gradient(circle at 15% 20%, rgba(212, 175, 55, 0.08), transparent 25%),
+    radial-gradient(circle at 85% 70%, rgba(126, 182, 255, 0.07), transparent 30%),
+    linear-gradient(180deg, #070b16 0%, #0a1020 50%, #060912 100%);
+}
+
+.stars {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.55;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, #fff, transparent),
+    radial-gradient(1px 1px at 30% 65%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 70% 15%, #ffe9a8, transparent),
+    radial-gradient(1px 1px at 85% 40%, #fff, transparent),
+    radial-gradient(1px 1px at 50% 80%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 20% 45%, #cde, transparent),
+    radial-gradient(1px 1px at 60% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 40% 10%, #fff, transparent),
+    radial-gradient(1px 1px at 92% 88%, #ffe9a8, transparent),
+    radial-gradient(1px 1px at 5% 90%, #fff, transparent);
+  background-size: 100% 100%;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 0 16px calc(88px + var(--safe-bottom));
+}
+
+/* Header */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 0 8px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: linear-gradient(180deg, rgba(7,11,22,0.96) 60%, rgba(7,11,22,0));
+  backdrop-filter: blur(8px);
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+}
+.brand-title {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  letter-spacing: 0.04em;
+  color: var(--gold-soft);
+  font-weight: 600;
+}
+.brand-sub {
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.top-actions { display: flex; gap: 8px; }
+
+/* Nav */
+.nav {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+  padding: 8px 8px calc(8px + var(--safe-bottom));
+  background: rgba(8, 12, 24, 0.92);
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+.nav button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  padding: 8px 4px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: color .2s, background .2s;
+}
+.nav button .ico { font-size: 1.15rem; line-height: 1; }
+.nav button.active {
+  color: var(--gold-soft);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+/* Views */
+.view { display: none; animation: fadeIn .35s ease; }
+.view.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Cards */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 14px 0;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+.card.gold-edge {
+  border-color: var(--line);
+  background:
+    linear-gradient(135deg, rgba(212,175,55,0.08), transparent 40%),
+    var(--bg-card);
+}
+.card.honesty {
+  border-color: rgba(126, 182, 255, 0.35);
+  background: linear-gradient(160deg, rgba(40,70,120,0.35), var(--bg-card));
+}
+.card h2, .card h3 {
+  font-family: var(--serif);
+  margin: 0 0 10px;
+  color: var(--gold-soft);
+  font-weight: 600;
+}
+.card h2 { font-size: 1.35rem; }
+.card h3 { font-size: 1.1rem; }
+.lead {
+  font-size: 1.05rem;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+.muted { color: var(--muted); }
+.small { font-size: 0.88rem; }
+.tiny { font-size: 0.78rem; letter-spacing: 0.04em; }
+
+/* Hero */
+.hero {
+  text-align: center;
+  padding: 28px 8px 8px;
+}
+.hero-kicker {
+  display: inline-block;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  margin-bottom: 16px;
+}
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 6vw, 2.4rem);
+  margin: 0 0 10px;
+  color: var(--gold-soft);
+  line-height: 1.2;
+}
+.hero p {
+  margin: 0 auto 22px;
+  max-width: 34em;
+  color: var(--muted);
+}
+
+/* Buttons */
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(212,175,55,0.2), rgba(212,175,55,0.08));
+  color: var(--gold-soft);
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 12px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s, background .15s;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(212,175,55,0.15); }
+.btn:active { transform: translateY(0); }
+.btn.primary {
+  background: linear-gradient(180deg, #e0c15a, #b8922a);
+  color: #1a1408;
+  border-color: #f0d78a;
+}
+.btn.ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--line-soft);
+}
+.btn.block { width: 100%; }
+.btn.small { padding: 8px 14px; font-size: 0.88rem; }
+
+/* Form */
+.form-grid {
+  display: grid;
+  gap: 14px;
+}
+.form-grid.two {
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 520px) {
+  .form-grid.two { grid-template-columns: 1fr; }
+}
+label {
+  display: block;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+input, select {
+  width: 100%;
+  appearance: none;
+  background: rgba(0,0,0,0.28);
+  border: 1px solid var(--line-soft);
+  color: var(--text);
+  font: inherit;
+  padding: 12px 14px;
+  border-radius: 12px;
+  outline: none;
+  transition: border-color .2s;
+}
+input:focus, select:focus { border-color: var(--gold); }
+select option { background: #121a32; }
+
+/* Chart showcase */
+.chart-hero {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+.decan-number {
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.decan-name {
+  font-family: var(--serif);
+  font-size: clamp(1.6rem, 5.5vw, 2.2rem);
+  color: var(--gold-soft);
+  margin: 0 0 6px;
+  line-height: 1.15;
+}
+.decan-trans {
+  font-style: italic;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+.theme-line {
+  font-size: 1.05rem;
+  color: var(--text);
+  margin: 0 0 16px;
+}
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line-soft);
+  background: rgba(255,255,255,0.03);
+  color: var(--muted);
+}
+.badge.akhet { border-color: rgba(91,159,212,0.45); color: #a8d0f0; }
+.badge.peret { border-color: rgba(107,191,138,0.45); color: #b6e6c8; }
+.badge.shemu { border-color: rgba(224,163,90,0.45); color: #f0d0a8; }
+.badge.epag { border-color: rgba(192,132,252,0.45); color: #e0c4ff; }
+.badge.parlor { border-color: rgba(212,175,55,0.35); color: var(--gold-soft); }
+
+.reading {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+}
+.reading p { margin: 0 0 12px; }
+.counsel {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(212,175,55,0.08);
+  border-left: 3px solid var(--gold);
+  color: var(--gold-soft);
+  font-family: var(--serif);
+  font-size: 1.02rem;
+}
+
+/* Wheel */
+.wheel-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0 8px;
+}
+.wheel {
+  width: min(280px, 85vw);
+  height: min(280px, 85vw);
+}
+.aspect-meta {
+  text-align: center;
+  margin-top: 8px;
+}
+.aspect-name {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  color: var(--gold-soft);
+  margin: 0 0 4px;
+}
+.tone-fusion { color: #f0d78a; }
+.tone-near, .tone-mild { color: #a8d0f0; }
+.tone-gift { color: #b6e6c8; }
+.tone-tension { color: #f0b0a8; }
+.tone-polarity { color: #e0c4ff; }
+.tone-mixed, .tone-liminal { color: #c0c8e0; }
+
+/* Learn */
+.timeline {
+  position: relative;
+  padding-left: 22px;
+  margin: 8px 0;
+}
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 6px; top: 4px; bottom: 4px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--gold), rgba(212,175,55,0.15));
+}
+.tl-item {
+  position: relative;
+  margin: 0 0 18px;
+}
+.tl-item::before {
+  content: "";
+  position: absolute;
+  left: -19px; top: 7px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212,175,55,0.2);
+}
+.tl-item strong {
+  display: block;
+  color: var(--gold-soft);
+  font-family: var(--serif);
+  margin-bottom: 4px;
+}
+
+.gallery {
+  display: grid;
+  gap: 10px;
+}
+.gallery-item {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line-soft);
+  background: rgba(0,0,0,0.18);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  width: 100%;
+  transition: border-color .2s, background .2s;
+}
+.gallery-item:hover, .gallery-item:focus {
+  border-color: var(--line);
+  background: rgba(212,175,55,0.06);
+  outline: none;
+}
+.gallery-num {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  background: rgba(212,175,55,0.12);
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.gallery-item h4 {
+  margin: 0 0 2px;
+  font-family: var(--serif);
+  font-size: 1rem;
+  color: var(--gold-soft);
+  font-weight: 600;
+}
+.gallery-item p { margin: 0; font-size: 0.85rem; color: var(--muted); }
+
+.learn-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+.chip {
+  appearance: none;
+  border: 1px solid var(--line-soft);
+  background: rgba(255,255,255,0.03);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.chip.active {
+  color: var(--gold-soft);
+  border-color: var(--line);
+  background: rgba(212,175,55,0.1);
+}
+
+.learn-section { display: none; }
+.learn-section.active { display: block; }
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+}
+.stat {
+  text-align: center;
+  padding: 12px 8px;
+  border-radius: 14px;
+  background: rgba(0,0,0,0.22);
+  border: 1px solid var(--line-soft);
+}
+.stat .n {
+  display: block;
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  color: var(--gold-soft);
+}
+.stat .l {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pair {
+  display: grid;
+  gap: 10px;
+}
+@media (min-width: 560px) {
+  .pair.two { grid-template-columns: 1fr 1fr; }
+}
+
+.footer-note {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  padding: 20px 8px 8px;
+}
+
+.hidden { display: none !important; }
+.error {
+  color: var(--danger);
+  font-size: 0.9rem;
+  margin: 8px 0 0;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+}
+@media (min-width: 600px) {
+  .modal-backdrop { align-items: center; }
+}
+.modal {
+  width: min(520px, 100%);
+  max-height: 85vh;
+  overflow: auto;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.modal-close {
+  float: right;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.today-compare {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+}
+.today-compare .side {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line-soft);
+  background: rgba(0,0,0,0.18);
+}
+.today-compare .side .lbl {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.today-compare .side .nm {
+  font-family: var(--serif);
+  color: var(--gold-soft);
+  font-size: 1.05rem;
+}
+
+.pill-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+}
+.pill-link:hover { text-decoration: underline; }
+
+.season-akhet { --season: var(--akhet); }
+.season-peret { --season: var(--peret); }
+.season-shemu { --season: var(--shemu); }
+
+  </style>
+</head>
+<body>
+  <div class="stars" aria-hidden="true"></div>
+  <div class="app">
+    <header class="topbar">
+      <button type="button" class="brand" aria-label="Hour-Stars home">
+        <span class="brand-title">Hour-Stars</span>
+        <span class="brand-sub">Egyptian Horoscope &amp; Sky School</span>
+      </button>
+      <div class="top-actions">
+        <button type="button" class="btn ghost small" data-go="learn" data-learn="layers">Three Layers</button>
+      </div>
+    </header>
+
+    <!-- HOME -->
+    <section class="view active" data-view="home" id="view-home">
+      <div class="hero">
+        <span class="hero-kicker">Decan Passport · Free educational core</span>
+        <h1>Egypt didn’t have Capricorn—it had decades.</h1>
+        <p>
+          Thirty-six hour-stars kept the night. Five days stood outside the year.
+          Your primary “sign” here is a <strong style="color:var(--gold-soft)">natal decade</strong>—
+          a living practice rebuilt with care, not a forged pharaonic sun sign.
+        </p>
+        <div class="btn-row">
+          <button type="button" class="btn primary" data-go="find">Find my hour-star</button>
+          <button type="button" class="btn" data-go="learn" data-learn="timeline">Start sky school</button>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat"><span class="n">36</span><span class="l">Decans</span></div>
+        <div class="stat"><span class="n">5</span><span class="l">God-days</span></div>
+        <div class="stat"><span class="n">3</span><span class="l">Seasons</span></div>
+      </div>
+
+      <div class="card gold-edge">
+        <h2>What you’ll learn</h2>
+        <p class="lead">Natal horoscopy as planets-in-signs with an Ascendant is Greco-Egyptian—built on Babylonian foundations—not a pharaonic birth-chart system.</p>
+        <p class="muted small">
+          Pharaonic Egypt tracked time with <em>decans</em> (10-day hour-stars), Sirius/Sopdet opening the year,
+          and five epagomenal births. Modern 12-deity “Egyptian zodiac” quizzes are parlor overlays—we teach that honestly.
+        </p>
+        <button type="button" class="pill-link" data-go="learn" data-learn="layers">Open the Three Layers lesson →</button>
+      </div>
+
+      <div class="card honesty">
+        <h3>Reconstruction, labeled</h3>
+        <p class="small">
+          Ceiling names and calendar math lean on Egyptology (AR1/Senmut tradition, EAT).
+          Personality counsel wears a <strong>Reconstruction</strong> badge—crafted for teaching and practice, not claimed as ancient natal law.
+        </p>
+      </div>
+    </section>
+
+    <!-- FIND -->
+    <section class="view" data-view="find" id="view-find">
+      <div class="card gold-edge">
+        <h2>Find your decade</h2>
+        <p class="muted small">
+          Teaching Sothic year (schematic): Wepet Renpet ≈ July 19 · Memphis convention.
+          Primary result = one of 36 natal decans (or an epagomenal birth).
+        </p>
+        <form id="birth-form" class="form-grid" style="margin-top:16px" novalidate>
+          <div>
+            <label for="birth-name">Name (optional)</label>
+            <input id="birth-name" name="name" type="text" autocomplete="name" placeholder="Austin" />
+          </div>
+          <div class="form-grid two">
+            <div>
+              <label for="birth-month">Month</label>
+              <select id="birth-month" name="month" required>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7" selected>July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+            <div>
+              <label for="birth-day">Day</label>
+              <select id="birth-day" name="day" required></select>
+            </div>
+          </div>
+          <div>
+            <label for="birth-year">Year</label>
+            <input id="birth-year" name="year" type="number" min="1" max="2100" value="1990" required />
+          </div>
+          <label class="small muted" style="text-transform:none;letter-spacing:0;display:flex;gap:10px;align-items:flex-start;cursor:pointer">
+            <input type="checkbox" id="parlor-opt-in" style="width:auto;margin-top:3px" />
+            <span>Also show optional <strong>modern 12-guardian</strong> parlor overlay (not pharaonic natal law).</span>
+          </label>
+          <button type="submit" class="btn primary block">Cast my Decan Passport</button>
+          <p id="find-error" class="error" role="alert"></p>
+        </form>
+      </div>
+      <div class="card">
+        <h3>How we map your birthday</h3>
+        <p class="small">
+          Days 1–360 of the teaching year → 36 × 10-day decans. Days 361–365 → births of Osiris, Horus, Seth, Isis, Nephthys
+          (July 14–18 in this convention). Feb 29 folds to Feb 28 for natal stability.
+        </p>
+        <button type="button" class="pill-link" data-go="learn" data-learn="mapping">Full mapping lesson →</button>
+      </div>
+    </section>
+
+    <!-- PASSPORT / CHART -->
+    <section class="view" data-view="chart" id="view-chart">
+      <div id="chart-root"></div>
+    </section>
+
+    <!-- TODAY -->
+    <section class="view" data-view="today" id="view-today">
+      <div id="today-root"></div>
+    </section>
+
+    <!-- LEARN / SKY SCHOOL -->
+    <section class="view" data-view="learn" id="view-learn">
+      <div class="card gold-edge">
+        <h2>Sky School</h2>
+        <p class="muted small">Free educational core. Progress is non-punitive—your Passport works at Layer 1; school invites deeper.</p>
+        <div class="learn-nav" role="tablist">
+          <button type="button" class="chip active" data-learn="timeline">Timeline</button>
+          <button type="button" class="chip" data-learn="layers">Three Layers</button>
+          <button type="button" class="chip" data-learn="decan">What is a decan?</button>
+          <button type="button" class="chip" data-learn="mapping">Birthday map</button>
+          <button type="button" class="chip" data-learn="gallery">36 Gallery</button>
+          <button type="button" class="chip" data-learn="epag">Epagomenal</button>
+          <button type="button" class="chip" data-learn="honesty">Living practice</button>
+          <button type="button" class="chip" data-learn="sources">Sources</button>
+        </div>
+      </div>
+
+      <div class="learn-section active" data-learn="timeline">
+        <div class="card">
+          <h3>Timeline: Babylon → Egypt → Alexandria → newspaper</h3>
+          <div class="timeline">
+            <div class="tl-item">
+              <strong>Mesopotamia</strong>
+              Celestial omens and later zodiacal bands; concern with king and land more than individual Ascendant charts.
+            </div>
+            <div class="tl-item">
+              <strong>Pharaonic Egypt</strong>
+              Civil year of 360 + 5; 36 decans as star clocks and religious sky language (diagonal coffins, temple ceilings, Book of Nut). Not personality sun signs.
+            </div>
+            <div class="tl-item">
+              <strong>Hellenistic Alexandria</strong>
+              Babylonian zodiac + Greek philosophy fuse into natal horoscopy: Ascendant (<em>horoskopos</em>), houses, aspects. Greco-Egyptian milieu; Nechepso &amp; Petosiris lore.
+            </div>
+            <div class="tl-item">
+              <strong>Rome &amp; transmission</strong>
+              Ptolemy’s <em>Tetrabiblos</em>, Greek horoscope papyri; Arabic then Latin medieval lines keep the craft alive.
+            </div>
+            <div class="tl-item">
+              <strong>Newspaper sun signs (1930→)</strong>
+              R. H. Naylor’s mass-media columns simplify to twelve birth-month paragraphs. Not ancient. Not Egyptian. Not a full natal chart.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="learn-section" data-learn="layers">
+        <div class="card honesty">
+          <h3>Three Layers (core teaching claim)</h3>
+          <div class="pair">
+            <div class="card" style="margin:0;box-shadow:none">
+              <h3>1 · Pharaonic decans</h3>
+              <p class="small">Calendar, night clock, Nut cosmology, Sopdet year-markers. <em>Not</em> “what’s your Egyptian Capricorn.”</p>
+            </div>
+            <div class="card" style="margin:0;box-shadow:none">
+              <h3>2 · Greco-Egyptian natal</h3>
+              <p class="small">Planets in signs + Ascendant/houses in Alexandria &amp; Roman Egypt. Real history—distinct from star clocks.</p>
+            </div>
+            <div class="card" style="margin:0;box-shadow:none">
+              <h3>3 · Newspaper sun signs</h3>
+              <p class="small">20th-century media product. Hour-Stars never sells Layer 3 as Layer 1.</p>
+            </div>
+          </div>
+          <p class="small muted" style="margin-top:12px">Mystical permission is for living reconstruction; historical claims stay in Layers 1–2.</p>
+        </div>
+      </div>
+
+      <div class="learn-section" data-learn="decan">
+        <div class="card">
+          <h3>What is a decan?</h3>
+          <p>
+            A <strong>decan</strong> (from Greek <em>deka</em>, ten) in Egyptian sky tradition is a star or small asterism
+            used to mark <strong>10-day periods</strong> and night hours. Evidence runs from Middle Kingdom diagonal star tables
+            on coffin lids through New Kingdom ceilings.
+          </p>
+          <p class="small muted">
+            List families differ (AR1 Senmut, Seti traditions, etc.). This app uses the AR1 / Senmut (EAT3) calendar skeleton:
+            <strong>Tepy-a Kenmet → … → Sopdet</strong>. Many names remain untranslated; uncertainty is content, not a bug.
+          </p>
+          <p>
+            Greek astrology later reused “decans” as 10° faces of zodiac signs—related prestige, not identical to Egyptian star clocks.
+          </p>
+        </div>
+      </div>
+
+      <div class="learn-section" data-learn="mapping">
+        <div class="card">
+          <h3>How we map your birthday</h3>
+          <p>
+            <strong>Teaching Sothic year (schematic).</strong> Wepet Renpet (“Opening of the Year”) is fixed at
+            <strong>July 19</strong> Gregorian as a Memphis-convention teaching anchor for Sirius/Sopdet.
+            Real heliacal rising varies by latitude and atmosphere—Elephantine saw Sopdet earlier than Memphis.
+          </p>
+          <ul class="small">
+            <li>Sothic day 1–360 → <code>decan_id = ceil(doy / 10)</code></li>
+            <li>Days 361–365 → epagomenal path (Jul 14–18), before New Year</li>
+            <li>Civil seasons: Akhet (Inundation), Peret (Emergence), Shemu (Harvest)</li>
+            <li>Leap day: Feb 29 maps to Feb 28 for natal badges on the 365 template</li>
+          </ul>
+          <p class="small muted">Chip in the Passport: “Teaching Sothic year (schematic)” — not a claim of a frozen ancient civil lock to today’s Gregorian.</p>
+        </div>
+      </div>
+
+      <div class="learn-section" data-learn="gallery">
+        <div class="card">
+          <h3>Gallery of 36 hour-stars</h3>
+          <p class="muted small">AR1 / Senmut tradition. Tap a decade for historical strip + reconstruction counsel.</p>
+          <div id="gallery-root"></div>
+        </div>
+      </div>
+
+      <div class="learn-section" data-learn="epag">
+        <div class="card">
+          <h3>Epagomenal days · ḥryw rnpt</h3>
+          <div id="epag-root"></div>
+        </div>
+      </div>
+
+      <div class="learn-section" data-learn="honesty">
+        <div class="card honesty">
+          <h3>Living practice — honesty card</h3>
+          <p>
+            Pharaonic Egypt used these names in sky clocks and temple ceilings. Greco-Egyptian Egypt developed natal charts.
+            <strong>This app’s personality counsel is a modern reconstruction</strong> for teaching and reflective practice.
+          </p>
+          <p class="small">
+            We do not invent papyri that “say natives of Kenmet are…” We do not claim pharaohs cast Decan Passports.
+            We do invite wonder: the sky was a clock and a theology—and a careful reconstruction can still teach attention.
+          </p>
+          <p class="counsel">Ceiling name: historical. Counsel: ours, labeled.</p>
+        </div>
+        <div class="card">
+          <h3>Optional parlor overlay</h3>
+          <p class="small muted">
+            The 12-deity “Egyptian zodiac” (Nile, Amun-Ra, Mut…) circulating on the modern web is <strong>not</strong>
+            New Kingdom law and <strong>not</strong> the Dendera ceiling’s meaning. If you opt in on the birth form,
+            it appears as a secondary badge only—Decan stays H1.
+          </p>
+        </div>
+      </div>
+
+      <div class="learn-section" data-learn="sources">
+        <div class="card">
+          <h3>Sources (scholarly preference)</h3>
+          <ul class="small">
+            <li>Neugebauer &amp; Parker, <em>Egyptian Astronomical Texts</em> I–III (decans, star clocks)</li>
+            <li>Alexandra von Lieven on the Book of Nut / <em>Fundamentals of the Course of the Stars</em></li>
+            <li>Sarah Symons / McMaster Ancient Egyptian Astronomy database (list families, Senmut AR1)</li>
+            <li>Francesca Rochberg, <em>Babylonian Horoscopes</em>; Jones &amp; Steele on Terms’ Babylonian antecedents</li>
+            <li>Neugebauer &amp; van Hoesen, <em>Greek Horoscopes</em>; Ptolemy, <em>Tetrabiblos</em></li>
+            <li>Museum consensus on Dendera as late Ptolemaic/Roman Greco-Egyptian hybrid</li>
+            <li>R. H. Naylor / newspaper sun-sign history (1930→1937 mass simplification)</li>
+          </ul>
+          <p class="tiny muted">Full research brief: RESEARCH.md in this project. When copy and research conflict, research wins.</p>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer-note">Hour-Stars · free educational prototype · no Temple Pass</p>
+  </div>
+
+  <nav class="nav" aria-label="Primary">
+    <button type="button" data-nav="home" class="active"><span class="ico">✦</span>Home</button>
+    <button type="button" data-nav="find"><span class="ico">☉</span>Find</button>
+    <button type="button" data-nav="chart"><span class="ico">𓇼</span>Passport</button>
+    <button type="button" data-nav="today"><span class="ico">☾</span>Today</button>
+    <button type="button" data-nav="learn"><span class="ico">📜</span>School</button>
+  </nav>
+
+  <script>
+/* Hour-Stars embedded catalog — AR1 / Senmut (EAT3) */
+window.HS_DATA = {
+  "decans": [
+    {
+      "id": 1,
+      "egyptianName": "Tepy-a Kenmet",
+      "transliteration": "tpy-ꜥ knmt",
+      "translation": "Predecessor of Kenmet",
+      "theme": "The year opens in shadow",
+      "mineral": null,
+      "deityAssociation": "Hapy and Imseti (Sons of Horus)",
+      "interpretation": "You are born at Wepet Renpet, when the civil year is still dark and Kenmet has not yet fully risen. Tepy-a Kenmet is the forerunner: a threshold star, not the creature itself. Natives of this decade often live as scouts — first through the door, last to claim the room. The two Sons of Horus who keep this decan (Hapy the lungs, Imseti the liver) ask that breath and inner life stay joined: do not start what you will not inhabit.",
+      "counsel": "Begin cleanly, then stay. The gift of the predecessor is to open a path others can walk — not to vanish once the door swings.",
+      "startDayOfYear": 1,
+      "endDayOfYear": 10,
+      "gregorianApprox": "Jul 19 – Jul 28",
+      "season": "Akhet",
+      "egyptianMonth": 1,
+      "asterismGroup": "Kenmet",
+      "eat3": 1,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "knmt itself is untranslated in EAT1 ('an animal or a bird'). Popular 'Cow' is a later guess from a possible animal determinative; knm can also mean darkness. Group anatomy names (hind-part of Kenmet) make a creature reading likelier than 'darkness,' but the identity is not settled."
+    },
+    {
+      "id": 2,
+      "egyptianName": "Kenmet",
+      "transliteration": "knmt",
+      "translation": "Kenmet (animal or bird; identity uncertain)",
+      "theme": "The creature takes form",
+      "mineral": null,
+      "deityAssociation": "Isis",
+      "interpretation": "Where the predecessor only announced, Kenmet is the body of the thing. You grow by taking shape, not by remaining potential. Isis as listed deity ties this decade to protection, naming, and the work of making a life hold together after loss. People of Kenmet often need a craft, a household, or a living being to tend — something with a hide and a hunger.",
+      "counsel": "Give your ambition a body. Feed what you are building; unnamed projects starve.",
+      "startDayOfYear": 11,
+      "endDayOfYear": 20,
+      "gregorianApprox": "Jul 29 – Aug 7",
+      "season": "Akhet",
+      "egyptianMonth": 1,
+      "asterismGroup": "Kenmet",
+      "eat3": 2,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "EAT1: '(an animal or a bird).' Not 'the Cow' as a secure translation."
+    },
+    {
+      "id": 3,
+      "egyptianName": "Khry-kheped-en-Kenmet",
+      "transliteration": "ẖry ḫpd n knmt",
+      "translation": "The one under the hind-part of Kenmet",
+      "theme": "Power that works from behind",
+      "mineral": null,
+      "deityAssociation": "Isis (grouped with Kenmet in Senenmut)",
+      "interpretation": "This is the haunch and the hidden leverage of Kenmet — the part that pushes the animal forward. You may prefer to work from the rear of events: logistics, memory, the unglamorous joint that actually moves the body. Change comes to you as a shift in weight, not a speech. Isis still covers this group, so the unseen work is protective, not merely sly.",
+      "counsel": "Own the back-of-house role without shrinking. Steering from behind is still steering — name your part aloud when it matters.",
+      "startDayOfYear": 21,
+      "endDayOfYear": 30,
+      "gregorianApprox": "Aug 8 – Aug 17",
+      "season": "Akhet",
+      "egyptianMonth": 1,
+      "asterismGroup": "Kenmet",
+      "eat3": 4,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "EAT1 translation of ẖry ḫpd n knmt is secure as a body-part phrase; the animal is not."
+    },
+    {
+      "id": 4,
+      "egyptianName": "Hat Djat",
+      "transliteration": "ḥꜣt ḏꜣt",
+      "translation": "Beginning of Djat",
+      "theme": "Laying the first course",
+      "mineral": null,
+      "deityAssociation": "Duamutef and the Children of Horus",
+      "interpretation": "Ḥꜣt, 'front' or 'beginning,' opens a new asterism whose name ḏꜣt Neugebauer and Parker left untranslated. You are a foundation-layer: the one who sets the first course of brick and decides the line of the wall. Duamutef (the stomach, the jackal-headed son) and the four Children together mark this as a decade of appetite put to use — hunger that builds rather than merely consumes.",
+      "counsel": "Start with a true line. A crooked first course will haunt every course above it.",
+      "startDayOfYear": 31,
+      "endDayOfYear": 40,
+      "gregorianApprox": "Aug 18 – Aug 27",
+      "season": "Akhet",
+      "egyptianMonth": 2,
+      "asterismGroup": "Djat",
+      "eat3": 6,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "ḏꜣt is untranslated in EAT. Later writers sometimes guess 'crane' from a bird determinative; that is not an EAT gloss."
+    },
+    {
+      "id": 5,
+      "egyptianName": "Pehwy Djat",
+      "transliteration": "pḥwy ḏꜣt",
+      "translation": "End of Djat",
+      "theme": "Finishing what was begun",
+      "mineral": null,
+      "deityAssociation": "Duamutef and the Children of Horus",
+      "interpretation": "Pḥwy is the hinder end: the same asterism, now complete. You inherit the talent of closure — of knowing when a work is done and refusing to keep decorating a finished thing. This is a natal gift for editors, judges, and people who can walk away. The danger is abandoning a wall one course too soon, or staying to polish what should already be lived in.",
+      "counsel": "Practice completion as a ritual. Declare a thing finished, then let it stand without you.",
+      "startDayOfYear": 41,
+      "endDayOfYear": 50,
+      "gregorianApprox": "Aug 28 – Sep 6",
+      "season": "Akhet",
+      "egyptianMonth": 2,
+      "asterismGroup": "Djat",
+      "eat3": 8,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": null
+    },
+    {
+      "id": 6,
+      "egyptianName": "Temat Heret",
+      "transliteration": "ṯmꜣt ḥrt",
+      "translation": "Upper Temat",
+      "theme": "The higher half of a pair",
+      "mineral": null,
+      "deityAssociation": "Duamutef",
+      "interpretation": "Temat is split into an upper and a lower, and you belong to the skyward half: the part that shows, that catches light, that others name first. Duamutef asks that what you display be fed from a real stomach — not a hollow show. This is a natal of covering and lifting, whatever the untranslated ṯmꜣt originally named.",
+      "counsel": "Let the visible half of your life be honest. If you lead, make sure the lower half is not starving.",
+      "startDayOfYear": 51,
+      "endDayOfYear": 60,
+      "gregorianApprox": "Sep 7 – Sep 16",
+      "season": "Akhet",
+      "egyptianMonth": 2,
+      "asterismGroup": "Temat",
+      "eat3": 10,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "ṯmꜣt untranslated in EAT1. 'Upper wing' is a modern conjecture, not a scholarly gloss."
+    },
+    {
+      "id": 7,
+      "egyptianName": "Temat Kheret",
+      "transliteration": "ṯmꜣt ẖrt",
+      "translation": "Lower Temat",
+      "theme": "The grounding half of a pair",
+      "mineral": null,
+      "deityAssociation": "Duamutef (grouped with upper Temat in Senenmut)",
+      "interpretation": "You are the underside of the same figure: the half that bears weight. Lower Temat natives often do the work that makes the upper half possible — holding, lining, catching what falls. This is not lesser; in Egyptian lists ḥrt and ẖrt are a pair, not a ranking. Endings feel native to you: you know when a covering has worn through.",
+      "counsel": "Do not confuse being underneath with being unseen. Ask for the credit that keeps the pair intact.",
+      "startDayOfYear": 61,
+      "endDayOfYear": 70,
+      "gregorianApprox": "Sep 17 – Sep 26",
+      "season": "Akhet",
+      "egyptianMonth": 3,
+      "asterismGroup": "Temat",
+      "eat3": 12,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": null
+    },
+    {
+      "id": 8,
+      "egyptianName": "Weshati",
+      "transliteration": "wšꜣtı͗",
+      "translation": "Weshati (untranslated; pair with Bekati)",
+      "theme": "One of a living pair",
+      "mineral": null,
+      "deityAssociation": "Duamutef and Hapy (Sons of Horus)",
+      "interpretation": "Weshati and Bekati travel as a couple in the lists; EAT offers no translation. In T-family coffins they sometimes fuse as wšꜣty-bkꜣty. You are natal to partnership — not necessarily romance, but any doubled life: twins of purpose, a craft shared, a name that only makes sense beside another. Stomach and lungs (Duamutef, Hapy) want the pair fed and breathing together.",
+      "counsel": "Choose your other carefully, then keep faith with the doubling. Isolation is your drought.",
+      "startDayOfYear": 71,
+      "endDayOfYear": 80,
+      "gregorianApprox": "Sep 27 – Oct 6",
+      "season": "Akhet",
+      "egyptianMonth": 3,
+      "asterismGroup": "Weshati-Bekati",
+      "eat3": 13,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "Name untranslated. Modern 'pregnant twins' is not an EAT reading."
+    },
+    {
+      "id": 9,
+      "egyptianName": "Bekati",
+      "transliteration": "bkꜣtı͗",
+      "translation": "Bekati (untranslated; pair with Weshati)",
+      "theme": "The answering half of the pair",
+      "mineral": null,
+      "deityAssociation": "Duamutef and Hapy (Sons of Horus)",
+      "interpretation": "If Weshati is the first of the couple, Bekati is the reply. You may come second in a story that was already moving — a younger sibling, a later vocation, the person who completes a circuit. That secondness is not delay; it is how this asterism is written. Fertility of outcome (whatever bkꜣ may hint) belongs to follow-through, not to first spark.",
+      "counsel": "Stop apologizing for arriving after the opening scene. Finish the pairing; that is the work.",
+      "startDayOfYear": 81,
+      "endDayOfYear": 90,
+      "gregorianApprox": "Oct 7 – Oct 16",
+      "season": "Akhet",
+      "egyptianMonth": 3,
+      "asterismGroup": "Weshati-Bekati",
+      "eat3": 15,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "bkꜣ in other contexts can relate to pregnancy/conceiving; that is a possible etymological hint, not a translation of the star name."
+    },
+    {
+      "id": 10,
+      "egyptianName": "Tepy-a Khentet",
+      "transliteration": "tpy-ꜥ ḫntt",
+      "translation": "Predecessor of Khentet",
+      "theme": "Sighting the prow before the ship",
+      "mineral": null,
+      "deityAssociation": "Horus",
+      "interpretation": "Khentet is, in EAT, part of a ship; you are the lookout before the prow is even visible. Horus as deity sets a standard of right seeing — the falcon's eye over the Nile. Natives of this decade often know where a venture is headed before they have a vessel. The task is to wait for wood and crew, not to swim the whole river alone.",
+      "counsel": "Name the destination, then build the boat. Vision without a hull is only a stare.",
+      "startDayOfYear": 91,
+      "endDayOfYear": 100,
+      "gregorianApprox": "Oct 17 – Oct 26",
+      "season": "Akhet",
+      "egyptianMonth": 4,
+      "asterismGroup": "Khentet (part of a ship)",
+      "eat3": 19,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "ḫntt: EAT1 '(part of a ship).'"
+    },
+    {
+      "id": 11,
+      "egyptianName": "Khentet Heret",
+      "transliteration": "ḫntt ḥrt",
+      "translation": "Upper Khentet",
+      "theme": "The high prow, the public course",
+      "mineral": null,
+      "deityAssociation": "Horus (grouped with Tepy-a Khentet in Senenmut)",
+      "interpretation": "Upper Khentet is the ship's showing face — the prow that cuts water and is painted for the gods to see. You live in the public half of motion: titles, routes, the story told of a journey. Horus here is kingship as navigation. Pride is native; so is the duty to keep the course true when everyone is watching the bow.",
+      "counsel": "Steer where you have said you would. A decorated prow that yaws is worse than a plain one that holds.",
+      "startDayOfYear": 101,
+      "endDayOfYear": 110,
+      "gregorianApprox": "Oct 27 – Nov 5",
+      "season": "Akhet",
+      "egyptianMonth": 4,
+      "asterismGroup": "Khentet (part of a ship)",
+      "eat3": 20,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": null
+    },
+    {
+      "id": 12,
+      "egyptianName": "Khentet Kheret",
+      "transliteration": "ḫntt ẖrt",
+      "translation": "Lower Khentet",
+      "theme": "The keel under conflict",
+      "mineral": null,
+      "deityAssociation": "Seth",
+      "interpretation": "Lower Khentet is the submerged line of the same ship, and Senenmut gives it to Seth. You work in the water, not the paint: friction, storm, the necessary violence of a keel. Seth is not 'evil' here so much as the god who can stand in the prow of Ra's night-bark against Apep. Natives of this decade are often the ones who can endure a fight others moralize away.",
+      "counsel": "Use conflict as a keel, not as a flood. Fight what actually threatens the boat; spare the crew your weather.",
+      "startDayOfYear": 111,
+      "endDayOfYear": 120,
+      "gregorianApprox": "Nov 6 – Nov 15",
+      "season": "Akhet",
+      "egyptianMonth": 4,
+      "asterismGroup": "Khentet (part of a ship)",
+      "eat3": 21,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "Seth as listed deity is secure in AR1/Senenmut. The 'boat' figure is also noted on that ceiling."
+    },
+    {
+      "id": 13,
+      "egyptianName": "Tjemes-en-Khentet",
+      "transliteration": "ṯms n ḫntt",
+      "translation": "The red one of Khentet",
+      "theme": "The reddened prow, war-paint and warning",
+      "mineral": null,
+      "deityAssociation": "Horus",
+      "interpretation": "Ṯms is 'red' — ochre, blood, desert, the color of both life and danger. You carry a marked prow: people see you coming. Horus reclaims the ship after Seth's lower Khentet, so this decade is often about taking a stained situation and making it rightful again. Anger is a tool; unused, it rusts into bitterness.",
+      "counsel": "Let the red be a signal, not a smear. Show your heat, then put it to a lawful use.",
+      "startDayOfYear": 121,
+      "endDayOfYear": 130,
+      "gregorianApprox": "Nov 16 – Nov 25",
+      "season": "Peret",
+      "egyptianMonth": 5,
+      "asterismGroup": "Khentet (part of a ship)",
+      "eat3": 22,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "EAT1: 'the red one of ḫntt.'"
+    },
+    {
+      "id": 14,
+      "egyptianName": "Saptj-khenwy",
+      "transliteration": "sꜣptı͗ ḫnwy",
+      "translation": "Saptj of the Khenwy (khenwy perhaps fish or reeds)",
+      "theme": "Two banks, one crossing",
+      "mineral": null,
+      "deityAssociation": "Isis and Nephthys",
+      "interpretation": "Ḫnwy is guessed in EAT as fish or reeds — river-life, the two edges of a channel. The sister-pair Isis and Nephthys stand here as they stand at either end of a coffin: one for the living name, one for the west. You are a joiner of banks. Natives often mediate, translate, or keep vigil between two households that cannot look at each other directly.",
+      "counsel": "Do not become the river you are trying to bridge. Keep a bank of your own.",
+      "startDayOfYear": 131,
+      "endDayOfYear": 140,
+      "gregorianApprox": "Nov 26 – Dec 5",
+      "season": "Peret",
+      "egyptianMonth": 5,
+      "asterismGroup": "Khenwy (fish or reeds, uncertain)",
+      "eat3": 25,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "sꜣptı͗ ḫnwy untranslated as a whole; ḫnwy tentatively 'fish or reeds' in EAT1. Not the same as T-list ḳdty."
+    },
+    {
+      "id": 15,
+      "egyptianName": "Hery-ib-Wia",
+      "transliteration": "ḥry-ı͗b wı͗ꜣ",
+      "translation": "Middle of the ship",
+      "theme": "Standing amidships of the boat",
+      "mineral": null,
+      "deityAssociation": "Seth",
+      "interpretation": "Ḥry-ib wı͗ꜣ is one of the most secure names: you are born to the waist of the solar boat, where the crew's weight sits and the god of necessary force (Seth) is stationed in the night journey. Center is not peace; center is load. People of this decade often become the person everyone leans on, and must learn the difference between carrying and being used as ballast.",
+      "counsel": "Take the midship post on purpose, with rest built in. A boat with no one spelling the center will list.",
+      "startDayOfYear": 141,
+      "endDayOfYear": 150,
+      "gregorianApprox": "Dec 6 – Dec 15",
+      "season": "Peret",
+      "egyptianMonth": 5,
+      "asterismGroup": "The ship (wia)",
+      "eat3": 28,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "EAT1: 'middle of the ship.' Among the most certain translations in the list."
+    },
+    {
+      "id": 16,
+      "egyptianName": "Seshmu",
+      "transliteration": "sšmw",
+      "translation": "Guides, crew, or wine-press (sšmw)",
+      "theme": "Those who conduct the voyage",
+      "mineral": null,
+      "deityAssociation": "Seth",
+      "interpretation": "Seshmu are the conductors: crew, guides, or — in another reading of the same word — the wine-press. Either way you are process, not figurehead. Seth again: the work is strenuous and not always loved. Natives of Seshmu excel at getting a company from bank to bank, and they sour when asked to be the statue on the prow instead of the hands on the oar.",
+      "counsel": "Lead as a conductor. Make the method visible so you are not mistaken for a servant or a tyrant.",
+      "startDayOfYear": 151,
+      "endDayOfYear": 160,
+      "gregorianApprox": "Dec 16 – Dec 25",
+      "season": "Peret",
+      "egyptianMonth": 6,
+      "asterismGroup": "The ship (wia)",
+      "eat3": 30,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "EAT1: 'crew, guides or wine press.' The wine-press reading is the god Shesmu; both remain possible."
+    },
+    {
+      "id": 17,
+      "egyptianName": "Kenmu",
+      "transliteration": "knmw",
+      "translation": "Kenmu (untranslated; a cluster)",
+      "theme": "The unnamed crew, rest in company",
+      "mineral": null,
+      "deityAssociation": "The Children of Horus",
+      "interpretation": "Kenmu has no EAT translation; it sits with the ship-group and is kept by all four Sons of Horus. You are natal to the unnamed many — the cluster, the staff, the siblings of a work. Rest is not idleness here; it is the night watch shared so no one stands every hour. A Kenmu life goes wrong when you try to be the only star in a cluster meant to be plural.",
+      "counsel": "Belong on purpose. Choose a crew whose gods you can live with, then let yourself be one among them.",
+      "startDayOfYear": 161,
+      "endDayOfYear": 170,
+      "gregorianApprox": "Dec 26 – Jan 4",
+      "season": "Peret",
+      "egyptianMonth": 6,
+      "asterismGroup": "The ship (wia)",
+      "eat3": 32,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "Untranslated. Modern 'secret stars' is not an EAT gloss."
+    },
+    {
+      "id": 18,
+      "egyptianName": "Tepy-a Semed",
+      "transliteration": "tpy-ꜥ smd",
+      "translation": "Predecessor of Semed",
+      "theme": "The horn before it shows",
+      "mineral": null,
+      "deityAssociation": "Horus",
+      "interpretation": "Semed opens the sheep-group. You arrive before the horn is visible: the yearling, the first hard edge of a gentle creature. Horus as deity makes this a decade of rightful force learning its shape. Natives often have a delayed public power — a quiet childhood, then a line of bone that will not be ignored.",
+      "counsel": "Do not rush the horn. Strength that arrives on time is cleaner than strength forced early.",
+      "startDayOfYear": 171,
+      "endDayOfYear": 180,
+      "gregorianApprox": "Jan 5 – Jan 14",
+      "season": "Peret",
+      "egyptianMonth": 6,
+      "asterismGroup": "Semed-Seret (sheep)",
+      "eat3": 33,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "smd itself is untranslated; the following decan srt is 'the sheep,' so a horn/sheep reading is contextual, not proven for smd."
+    },
+    {
+      "id": 19,
+      "egyptianName": "Semed",
+      "transliteration": "smd",
+      "translation": "Semed (untranslated; sheep-group)",
+      "theme": "The horn of the flock",
+      "mineral": null,
+      "deityAssociation": "Hapy (son of Horus)",
+      "interpretation": "Semed is the named star of the group, kept by Hapy — breath, the lungs, the ram-headed son in some later art. Celebration sits near this decade in popular reading because a horn is also a trumpet; keep that as poetry, not as a translation. What is grounded: you are a marker in a flock. People take direction from you even when you only meant to stand there.",
+      "counsel": "Notice who is using you as a landmark. Either accept the post or step out of the skyline.",
+      "startDayOfYear": 181,
+      "endDayOfYear": 190,
+      "gregorianApprox": "Jan 15 – Jan 24",
+      "season": "Peret",
+      "egyptianMonth": 7,
+      "asterismGroup": "Semed-Seret (sheep)",
+      "eat3": 36,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "smd untranslated. Senenmut notes a 'sheep' figure near this group."
+    },
+    {
+      "id": 20,
+      "egyptianName": "Sit (Seret)",
+      "transliteration": "sı͗t / srt",
+      "translation": "The sheep",
+      "theme": "The flock-soul, loyalty and weather",
+      "mineral": null,
+      "deityAssociation": "Isis",
+      "interpretation": "This is one of the few ordinary decans with a clear gloss: the sheep, kept by Isis. You are loyal past the point of sense, and you feel weather in the body before the sky admits it. Melancholy can come with the wool — a sheep stands in the open.",
+      "counsel": "Herd what you love, but leave the gate unlatched for yourself. Loyalty without an exit becomes a pen.",
+      "startDayOfYear": 191,
+      "endDayOfYear": 200,
+      "gregorianApprox": "Jan 25 – Feb 3",
+      "season": "Peret",
+      "egyptianMonth": 7,
+      "asterismGroup": "Semed-Seret (sheep)",
+      "eat3": 37,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "AR1 often writes sı͗t; T/K lists write srt. Same slot; EAT1 translation 'the sheep' is for srt."
+    },
+    {
+      "id": 21,
+      "egyptianName": "Sawy-Sit",
+      "transliteration": "sꜣwy sı͗t (sꜣwy srt)",
+      "translation": "Children of the sheep",
+      "theme": "The lambs, tending and being tended",
+      "mineral": null,
+      "deityAssociation": "Duamutef",
+      "interpretation": "Sawy are the young of the sheep. You inherit caretaking and the need for care at once; Duamutef makes this bodily — food, nursing, the household's heat. Healing is a native verb. The shadow is remaining a lamb when it is time to grow a horn of your own.",
+      "counsel": "Give care in measured bowls. Feed others from a full stomach, not an empty one.",
+      "startDayOfYear": 201,
+      "endDayOfYear": 210,
+      "gregorianApprox": "Feb 4 – Feb 13",
+      "season": "Peret",
+      "egyptianMonth": 7,
+      "asterismGroup": "Semed-Seret (sheep)",
+      "eat3": 38,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": null
+    },
+    {
+      "id": 22,
+      "egyptianName": "Khry-kheped-Seret",
+      "transliteration": "ẖry ḫpd srt (ẖry ḫpd sı͗t)",
+      "translation": "The one under the hind-part of the sheep",
+      "theme": "Desire under the flock",
+      "mineral": null,
+      "deityAssociation": "Qebehsenuef",
+      "interpretation": "As with Kenmet, the hind-part is leverage and also intimacy — the part not shown in formal procession. Qebehsenuef (intestines, the falcon-headed son) keeps this decade: the inner coil, what is processed in private. Love, appetite, and the unpresentable motives of loyalty live here. You read people from behind, which can be wisdom or surveillance.",
+      "counsel": "Let private hunger have a clean name. Shame turns a hind-star into a hidden snare.",
+      "startDayOfYear": 211,
+      "endDayOfYear": 220,
+      "gregorianApprox": "Feb 14 – Feb 23",
+      "season": "Peret",
+      "egyptianMonth": 8,
+      "asterismGroup": "Semed-Seret (sheep)",
+      "eat3": 39,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": null
+    },
+    {
+      "id": 23,
+      "egyptianName": "Tepy-a Akhuy",
+      "transliteration": "tpy-ꜥ ꜣḫ(wy)",
+      "translation": "Predecessor of the two spirits",
+      "theme": "On the threshold of the akh",
+      "mineral": null,
+      "deityAssociation": "Duamutef",
+      "interpretation": "The akh is the transfigured dead, the effective spirit, and you are the forerunner of a pair of them. You stand where ordinary life starts to gleam with the otherworld, and not every gleam is safe. Duamutef keeps the body fed while the spirit rehearses its rising; vocations that look impractical often work anyway.",
+      "counsel": "Test the gleam. Not every light is an akh; some are fever. Keep the body in the bargain.",
+      "startDayOfYear": 221,
+      "endDayOfYear": 230,
+      "gregorianApprox": "Feb 24 – Mar 5",
+      "season": "Peret",
+      "egyptianMonth": 8,
+      "asterismGroup": "Akhuy-Bawy (spirits, souls)",
+      "eat3": 40,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "EAT1: 'predecessor of the two spirits.'"
+    },
+    {
+      "id": 24,
+      "egyptianName": "Akhuy",
+      "transliteration": "ꜣḫ(wy)",
+      "translation": "The two spirits",
+      "theme": "A doubled afterlife in this life",
+      "mineral": null,
+      "deityAssociation": "Duamutef and Qebehsenuef",
+      "interpretation": "Akhuy are the pair of effective spirits. You may live two callings, two reputations, two rooms in the same house of the self — and the work is to let both be transfigured, not to kill one for the other's ease. Stomach and intestines as deities: digest the double life; do not store it as poison. Harvest-language fits because an akh is a completed becoming.",
+      "counsel": "Stop making one spirit the secret of the other. Introduce them. A joined pair is the name of the decan.",
+      "startDayOfYear": 231,
+      "endDayOfYear": 240,
+      "gregorianApprox": "Mar 6 – Mar 15",
+      "season": "Peret",
+      "egyptianMonth": 8,
+      "asterismGroup": "Akhuy-Bawy (spirits, souls)",
+      "eat3": 41,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": null
+    },
+    {
+      "id": 25,
+      "egyptianName": "Bawy",
+      "transliteration": "bꜣ(wy)",
+      "translation": "The two souls (ba)",
+      "theme": "The mobile soul, abundance of presence",
+      "mineral": null,
+      "deityAssociation": "Hapy and Imseti (Sons of Horus)",
+      "interpretation": "The ba is the mobile soul that can leave the tomb and travel. Two of them: you are hard to keep in one place, and your presence multiplies — in work, in rooms, in the stories people tell. Hapy and Imseti (breath and liver) want that travel fed and morally centered. Abundance is native; so is the risk of being everywhere except with yourself.",
+      "counsel": "Let the ba fly, then come home. A soul that never perches is only weather.",
+      "startDayOfYear": 241,
+      "endDayOfYear": 250,
+      "gregorianApprox": "Mar 16 – Mar 25",
+      "season": "Shemu",
+      "egyptianMonth": 9,
+      "asterismGroup": "Akhuy-Bawy (spirits, souls)",
+      "eat3": 44,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "EAT1: 'the two souls.' First decade of Shemu (Harvest) in this mapping."
+    },
+    {
+      "id": 26,
+      "egyptianName": "Khentu Heru",
+      "transliteration": "ḫntw ḥr(w)",
+      "translation": "Upper Khentu",
+      "theme": "The forward upper force",
+      "mineral": null,
+      "deityAssociation": "The Children of Horus",
+      "interpretation": "Upper Khentu is forward pressure under a full guard of the four Sons of Horus: clearing a path, ending a siege, the public act of making room. Use it as a harvest tool, not a wildfire. Authority that shows is native; destruction of enemies is a late poetic gloss, not the name.",
+      "counsel": "Aim the upper force. A path cleared for everyone is kingship; a path cleared only for you is a raid.",
+      "startDayOfYear": 251,
+      "endDayOfYear": 260,
+      "gregorianApprox": "Mar 26 – Apr 4",
+      "season": "Shemu",
+      "egyptianMonth": 9,
+      "asterismGroup": "Khentu",
+      "eat3": 45,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "ḫntw untranslated in EAT."
+    },
+    {
+      "id": 27,
+      "egyptianName": "Khentu Kheru",
+      "transliteration": "(ḫntw) ẖrw",
+      "translation": "Lower Khentu",
+      "theme": "Authority that holds the ground",
+      "mineral": null,
+      "deityAssociation": "The Children of Horus",
+      "interpretation": "Lower Khentu is the same unknown asterism, grounded. You keep what the upper force took. Administration, land, the unglamorous holding of a win — this is harvest as granary, not as sickle. People of this decade can become severe; the four Sons are protectors of viscera, which is to say of what must stay inside to keep a body alive.",
+      "counsel": "Hold without hoarding. Power that only stores will sour in the jar.",
+      "startDayOfYear": 261,
+      "endDayOfYear": 270,
+      "gregorianApprox": "Apr 5 – Apr 14",
+      "season": "Shemu",
+      "egyptianMonth": 9,
+      "asterismGroup": "Khentu",
+      "eat3": 47,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": null
+    },
+    {
+      "id": 28,
+      "egyptianName": "Qed",
+      "transliteration": "ḳd",
+      "translation": "Qed (untranslated; root ḳd means to build or form)",
+      "theme": "The forming hand",
+      "mineral": null,
+      "deityAssociation": "Hapy and Qebehsenuef",
+      "interpretation": "Qed is untranslated as a star, but the verb ḳd means to build and to form, and that hint is enough for a natal reading. You are native to making — clay, rooms, people — and Hapy with Qebehsenuef want the made thing to live, not merely to stand. Artistry without breath is a doll.",
+      "counsel": "Form what can breathe. Leave fingerprints; refuse the factory of soulless copies.",
+      "startDayOfYear": 271,
+      "endDayOfYear": 280,
+      "gregorianApprox": "Apr 15 – Apr 24",
+      "season": "Shemu",
+      "egyptianMonth": 10,
+      "asterismGroup": "Qed",
+      "eat3": 48,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "Untranslated as a decan. 'The Potter' is a modern reading from the verb, sometimes conflated with Khnum, who is not the listed deity."
+    },
+    {
+      "id": 29,
+      "egyptianName": "Sawy-Qed",
+      "transliteration": "sꜣwy ḳd",
+      "translation": "Children of Qed",
+      "theme": "What the maker's hands leave behind",
+      "mineral": null,
+      "deityAssociation": "Hapy and Qebehsenuef (grouped with Qed in Senenmut)",
+      "interpretation": "You are the issue of the forming hand: apprentice, heir, the work that outlives the worker. Sharing and possessiveness wrestle here — whose pot is it once it is fired? Natives of Sawy-Qed often inherit a craft or a family myth and must decide whether to copy or to throw a new shape.",
+      "counsel": "Honor the mold, then crack it on purpose. Children who only repeat the parent never become Qed.",
+      "startDayOfYear": 281,
+      "endDayOfYear": 290,
+      "gregorianApprox": "Apr 25 – May 4",
+      "season": "Shemu",
+      "egyptianMonth": 10,
+      "asterismGroup": "Qed",
+      "eat3": 49,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": null
+    },
+    {
+      "id": 30,
+      "egyptianName": "Khau",
+      "transliteration": "ḫꜣw",
+      "translation": "The thousands",
+      "theme": "Multitude, scale, and due regard",
+      "mineral": null,
+      "deityAssociation": "The Children of Horus",
+      "interpretation": "Ḫꜣw is one of the clearer names: the thousands. You think in crowds, yields, generations. Respect and the hunger for it both live at this scale — to be one among thousands, or the one thousands watch. The four Sons as deities insist that even a multitude is made of viscera: do not treat people as grain unless you also store them against famine.",
+      "counsel": "Choose your scale each day. Sometimes the work is one person; sometimes it is the granary. Do not confuse them.",
+      "startDayOfYear": 291,
+      "endDayOfYear": 300,
+      "gregorianApprox": "May 5 – May 14",
+      "season": "Shemu",
+      "egyptianMonth": 10,
+      "asterismGroup": "Khau",
+      "eat3": 50,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "EAT1: 'the thousands.'"
+    },
+    {
+      "id": 31,
+      "egyptianName": "Aryt",
+      "transliteration": "ꜥrt",
+      "translation": "Aryt (untranslated; possible 'jaw' or 'coil')",
+      "theme": "The mark that speaks",
+      "mineral": null,
+      "deityAssociation": "The Eye of Horus",
+      "interpretation": "Aryt is untranslated; what is secure is the deity, the restored Eye of Horus. You are natal to the mark that proves a wound was healed — signature, record, the thing that remains after injury. Legacy here is not fame; it is the eye put back in the face.",
+      "counsel": "Write, sign, restore. Leave a record that could heal someone who comes after the damage.",
+      "startDayOfYear": 301,
+      "endDayOfYear": 310,
+      "gregorianApprox": "May 15 – May 24",
+      "season": "Shemu",
+      "egyptianMonth": 11,
+      "asterismGroup": "Aryt / Sah",
+      "eat3": 51,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "Untranslated. Modern 'roll of papyrus' is a guess. First of the Sah/Orion approach in AR1."
+    },
+    {
+      "id": 32,
+      "egyptianName": "Hery-remen-Sah",
+      "transliteration": "ḥry rmn sꜣḥ",
+      "translation": "Upper arm of Sah (Orion)",
+      "theme": "The raised arm of Orion",
+      "mineral": null,
+      "deityAssociation": "The Children of Horus",
+      "interpretation": "Sah is Orion, later joined to Osiris, and you are the upper arm: the gesture that hails, wards, or lifts. Natives of this decade act with the body — they point, they carry, they refuse with a shoulder. The four Sons keep the corpse intact so the constellation can stand.",
+      "counsel": "Raise the arm for a reason. Gesture without offering is theater; offering without a spine is collapse.",
+      "startDayOfYear": 311,
+      "endDayOfYear": 320,
+      "gregorianApprox": "May 25 – Jun 3",
+      "season": "Shemu",
+      "egyptianMonth": 11,
+      "asterismGroup": "Sah (Orion)",
+      "eat3": 55,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "EAT1: 'upper arm (of Orion).' Secure identification of Sah with Orion."
+    },
+    {
+      "id": 33,
+      "egyptianName": "Khry-remen-Sah",
+      "transliteration": "ẖry rmn sꜣḥ",
+      "translation": "Lower arm of Sah (Orion)",
+      "theme": "The supporting arm of Orion",
+      "mineral": null,
+      "deityAssociation": "The Children of Horus",
+      "interpretation": "The lower arm is the one that bears. You are the brace under Sah's gesture — revelation that comes as support, not as lightning. People lean on you while looking at someone else's sky; illumination here is practical: you show how a thing is held.",
+      "counsel": "Name the weight you are holding. A lower arm that never speaks will break without anyone knowing why.",
+      "startDayOfYear": 321,
+      "endDayOfYear": 330,
+      "gregorianApprox": "Jun 4 – Jun 13",
+      "season": "Shemu",
+      "egyptianMonth": 11,
+      "asterismGroup": "Sah (Orion)",
+      "eat3": 59,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "EAT1: 'lower arm (of Orion).'"
+    },
+    {
+      "id": 34,
+      "egyptianName": "Remen-Sah",
+      "transliteration": "rmn sꜣḥ",
+      "translation": "Arm of Sah (Orion)",
+      "theme": "The arm entire, the reaching god",
+      "mineral": null,
+      "deityAssociation": "The Eye of Horus",
+      "interpretation": "This slot is often omitted on the Senenmut ceiling (a known AR1 quirk) but is present in the family list. The whole arm of Orion, kept by the Eye: reaching as restoration. You are natal to contact — the hand that finds the drowned, the work that reconnects. Protection is not a wall; it is an arm in the water.",
+      "counsel": "Reach, then grip. Half-gestures leave both parties in the river.",
+      "startDayOfYear": 331,
+      "endDayOfYear": 340,
+      "gregorianApprox": "Jun 14 – Jun 23",
+      "season": "Shemu",
+      "egyptianMonth": 12,
+      "asterismGroup": "Sah (Orion)",
+      "eat3": 60,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "Omitted in Senenmut TT 353; included in the AR1 family archetype (EAT3 60). Some lists write ꜥ sꜣḥ."
+    },
+    {
+      "id": 35,
+      "egyptianName": "Sah",
+      "transliteration": "sꜣḥ",
+      "translation": "Sah (Orion)",
+      "theme": "The father-star, Osiris in the south",
+      "mineral": null,
+      "deityAssociation": "Osiris",
+      "interpretation": "Sah is the constellation and the mythic body of Osiris among the stars. Protection, death-and-return, the husband-brother who must be gathered in pieces: these are not metaphors you have to force. The danger is identifying so fully with the dead god that you forget to live the year you are in.",
+      "counsel": "Be the assembled one, not the scattered one. Let people help you gather what grief divided.",
+      "startDayOfYear": 341,
+      "endDayOfYear": 350,
+      "gregorianApprox": "Jun 24 – Jul 3",
+      "season": "Shemu",
+      "egyptianMonth": 12,
+      "asterismGroup": "Sah (Orion)",
+      "eat3": 63,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "Sah = Orion, deity Osiris: among the most secure identifications in Egyptian astronomy."
+    },
+    {
+      "id": 36,
+      "egyptianName": "Sopdet",
+      "transliteration": "spdt",
+      "translation": "Sopdet (Sothis, Sirius)",
+      "theme": "The flood-star that closes the year",
+      "mineral": null,
+      "deityAssociation": "Isis",
+      "interpretation": "Sopdet is Sirius, Isis-as-star, the brightest of the list, occupying the last decade before the epagomenal births. You are a closer and a herald at once: inundation is your weather, and what has been dry will not stay dry. The New Year is not your birthday in this list; it is what you make possible.",
+      "counsel": "Announce the water, then get to high ground. You do not have to drown in the flood you can see coming.",
+      "startDayOfYear": 351,
+      "endDayOfYear": 360,
+      "gregorianApprox": "Jul 4 – Jul 13",
+      "season": "Shemu",
+      "egyptianMonth": 12,
+      "asterismGroup": "Sopdet (Sothis / Sirius)",
+      "eat3": 68,
+      "listFamily": "AR1 / Senmut (EAT3)",
+      "notes": "Most secure decan identity. List position 36 is the AR1/K-family order — NOT the same as 'Sopdet = day 1.' See calendar.md. T-family coffin lists also place spdt late (T 29), with Kenmet after her."
+    }
+  ],
+  "epagomenal": {
+    "egyptianName": "Heriu Renpet",
+    "transliteration": "ḥryw rnpt",
+    "translation": "Those upon the year (the five epagomenal days)",
+    "convention": {
+      "gregorian": "Jul 14 – Jul 18",
+      "choice": "before_wepet_renpet",
+      "why": "The civil year is 360 days plus five days treated as outside the year. Wepet Renpet (I Akhet 1) is the app's 19 July. The five days therefore sit immediately before New Year: 14–18 July. This matches the native order (they close the old year, they do not open the new one) and the Heliopolitan birth sequence Osiris–Horus–Seth–Isis–Nephthys. A minority of modern tables print 19–23 July; that would push Wepet Renpet off the Sothic convention this app uses and is not adopted."
+    },
+    "warning": "Epagomenal time was ritually dangerous. Torches, linen charms, and the rite 'Pacifying Sekhmet' (sḥtp Sḫmt) are attested. Scribes sometimes omitted the whole period from records.",
+    "days": [
+      {
+        "id": 1,
+        "dayOfYear": 361,
+        "gregorianApprox": "Jul 14",
+        "egyptianName": "Mesut Wesir",
+        "transliteration": "mswt wsı͗r",
+        "translation": "Birth of Osiris",
+        "deity": "Osiris",
+        "theme": "The dead god is born",
+        "interpretation": "You are born on the first day upon the year, when Osiris himself is born into the gap between calendars. This is a natal of assembly after scattering: you come from a place that is not quite a month, and you spend a life making body from pieces. Kingship here is of the west and of grain — the buried that feeds. The day is numbered, not month-named; you may always feel slightly outside ordinary time.",
+        "counsel": "Do not rush to join a month. Your work is to make a body that can survive being taken apart."
+      },
+      {
+        "id": 2,
+        "dayOfYear": 362,
+        "gregorianApprox": "Jul 15",
+        "egyptianName": "Mesut Hor",
+        "transliteration": "mswt ḥr",
+        "translation": "Birth of Horus",
+        "deity": "Horus",
+        "theme": "The living heir in the gap",
+        "interpretation": "The second added day is the birth of Horus: the son who must both avenge and succeed. You are natal to rightful force in a time with no month to hold it — a hawk over a calendar seam. People look to you for a verdict when the usual rules are off. The gift is clear seeing; the cost is being asked to be adult in a season that is not yet a year.",
+        "counsel": "Judge, then rest. An heir who never leaves the battlefield becomes only a weapon."
+      },
+      {
+        "id": 3,
+        "dayOfYear": 363,
+        "gregorianApprox": "Jul 16",
+        "egyptianName": "Mesut Setesh",
+        "transliteration": "mswt stẖ",
+        "translation": "Birth of Seth",
+        "deity": "Seth",
+        "theme": "Necessary storm, the unquiet birth",
+        "interpretation": "Seth's birthday is the unquiet one; later tradition treats it as especially dangerous, which is historical mood, not a curse you must swallow whole. You are natal to the force that keeps Apep off the night-bark — disruption that is sometimes the only thing standing between order and undoing. Lives under this day often include a necessary break with a family story. Do not confuse being the storm with being the wreckage.",
+        "counsel": "Spend your violence on the serpent, not on the crew. If a day is called unlucky, make it the day you tell the truth."
+      },
+      {
+        "id": 4,
+        "dayOfYear": 364,
+        "gregorianApprox": "Jul 17",
+        "egyptianName": "Mesut Aset",
+        "transliteration": "mswt ꜣst",
+        "translation": "Birth of Isis",
+        "deity": "Isis",
+        "theme": "The magician born on the verge of the year",
+        "interpretation": "Isis is born one day before the year opens, already in her Sothic character as the star who will reckon years. You are natal to retrieval: the name spoken back into a mouth, the child hidden, the spell that works because it is loved. This is the most 'magical' of the five in later piety, and the most devoted. The shadow is doing everyone else's resurrection and postponing your own New Year.",
+        "counsel": "Keep one piece of the rite for yourself. The year opens tomorrow; you do not have to open it alone."
+      },
+      {
+        "id": 5,
+        "dayOfYear": 365,
+        "gregorianApprox": "Jul 18",
+        "egyptianName": "Mesut Nebet-hut",
+        "transliteration": "mswt nbt-ḥwt",
+        "translation": "Birth of Nephthys",
+        "deity": "Nephthys",
+        "theme": "The last night, the west made ready",
+        "interpretation": "Nephthys is the last of the added days, the west, the sister who mourns and hides. Early on this was the chief night of the five, the nest from which the year-child would rise at dawn. You are natal to thresholds — New Year's Eve in the strict sense — and intimacy with endings is a gift if it does not become a refusal to be born tomorrow.",
+        "counsel": "Finish the watch, then step into I Akhet with everyone else. The nest is not a tomb unless you stay."
+      }
+    ]
+  },
+  "parlor": {
+    "disclaimer": "This 12-deity overlay is NOT the pharaonic decan system and is NOT the Dendera zodiac. Dendera's circular ceiling (Temple of Hathor, late Ptolemaic / early Roman) shows the Hellenistic twelve signs (Aries–Pisces) in Egyptian dress, plus Egyptian constellations and a ring of decans — a Greco-Egyptian sky, not these twelve gods as sun-signs. The Nile / Amun-Ra / Mut / Geb / Osiris / Isis / Thoth / Horus / Anubis / Seth / Bastet / Sekhmet date-list is a modern parlor 'Egyptian zodiac' circulated in 20th–21st century popular astrology (often French and later Anglophone web tables). Date ranges below follow that consensus parlor table so the app can offer a friendly outer layer. Do not present it as New Kingdom or as EAT.",
+    "deities": [
+      {
+        "id": 1,
+        "name": "Nile",
+        "egyptianName": "Hapy (the inundation; not a pharaonic zodiac sign)",
+        "domain": "Flow, renewal, the life-giving flood",
+        "dateRanges": [
+          {
+            "start": "01-01",
+            "end": "01-07"
+          },
+          {
+            "start": "06-19",
+            "end": "06-28"
+          },
+          {
+            "start": "09-01",
+            "end": "09-07"
+          },
+          {
+            "start": "11-18",
+            "end": "11-26"
+          }
+        ],
+        "dateRangesDisplay": [
+          "Jan 1–7",
+          "Jun 19–28",
+          "Sep 1–7",
+          "Nov 18–26"
+        ],
+        "interpretation": "In the parlor table you are the river, not a god of a nome. The historical Hapy is the plump twin-figured inundation, the one who makes Egypt possible. As a friendly overlay this reads as adaptability, replenishment, and a life that refuses to be a single channel. You rise and recede; people drink from you and forget to thank the source. This is not a decan and not a Dendera sign.",
+        "counsel": "Flood on purpose, then recede. A Nile that never drops leaves no fields."
+      },
+      {
+        "id": 2,
+        "name": "Amun-Ra",
+        "egyptianName": "Amun-Ra",
+        "domain": "Hidden sun, kingship, creative command",
+        "dateRanges": [
+          {
+            "start": "01-08",
+            "end": "01-21"
+          },
+          {
+            "start": "02-01",
+            "end": "02-11"
+          }
+        ],
+        "dateRangesDisplay": [
+          "Jan 8–21",
+          "Feb 1–11"
+        ],
+        "interpretation": "Amun is the hidden one, Ra the visible sun; fused, they are the New Kingdom state god. The parlor overlay casts this as leadership and radiance. Historically Amun's power was political as much as solar. As a natal flavor: you may prefer to work unseen (Amun) until the moment of appearance (Ra). Charisma that cannot bear privacy will burn the temple staff.",
+        "counsel": "Be hidden until the work is real, then show like noon. Do not rule a room you have not fed."
+      },
+      {
+        "id": 3,
+        "name": "Mut",
+        "egyptianName": "Mut",
+        "domain": "Maternal sovereignty, protection, the vulture crown",
+        "dateRanges": [
+          {
+            "start": "01-22",
+            "end": "01-31"
+          },
+          {
+            "start": "09-08",
+            "end": "09-22"
+          }
+        ],
+        "dateRangesDisplay": [
+          "Jan 22–31",
+          "Sep 8–22"
+        ],
+        "interpretation": "Mut is 'mother,' consort of Amun at Thebes, vulture-crowned, a queen who is also a sky. The parlor overlay reads as dignified care. Historically she is not a soft nurse; she is a mistress of the gods who can appear as a lioness. Natives in this table often mother institutions as much as children, and they take insult to their people as a personal wound.",
+        "counsel": "Protect without swallowing. A vulture-crown that smothers is no longer a crown."
+      },
+      {
+        "id": 4,
+        "name": "Geb",
+        "egyptianName": "Geb",
+        "domain": "Earth, vegetation, the ground that holds the dead and the grain",
+        "dateRanges": [
+          {
+            "start": "02-12",
+            "end": "02-29"
+          },
+          {
+            "start": "08-20",
+            "end": "08-31"
+          }
+        ],
+        "dateRangesDisplay": [
+          "Feb 12–29 (Feb 12–28 in common years)",
+          "Aug 20–31"
+        ],
+        "interpretation": "Geb is the earth-god, laughing goose, the ground Nut arches over. In the parlor table this is stability and loyalty. Historically Geb is also the heir of the Ennead's kingship before Osiris — earth as throne, not just soil. You are natal, in this overlay, to staying put when others fly. The risk is becoming the field everyone walks on and no one names.",
+        "counsel": "Be ground, not grave. Let things grow out of you; do not pull them back as soon as they sprout."
+      },
+      {
+        "id": 5,
+        "name": "Osiris",
+        "egyptianName": "Wesir",
+        "domain": "Death, grain, kingship of the west, cyclical return",
+        "dateRanges": [
+          {
+            "start": "03-01",
+            "end": "03-10"
+          },
+          {
+            "start": "11-27",
+            "end": "12-18"
+          }
+        ],
+        "dateRangesDisplay": [
+          "Mar 1–10",
+          "Nov 27 – Dec 18"
+        ],
+        "interpretation": "Osiris is the dismembered king who becomes the land's fertility and the judge of the dead. The parlor overlay's 'rebirth' is the shallow end of a deep well. As a friendly sign: you understand cycles, you compost what fails, you take the long revenge of growing back. Identify with the assembled body, not with the murder.",
+        "counsel": "Return, but not as the same corpse. What is gathered should be able to rule a living house."
+      },
+      {
+        "id": 6,
+        "name": "Isis",
+        "egyptianName": "Aset",
+        "domain": "Magic, mourning, queenship, the throne, Sopdet",
+        "dateRanges": [
+          {
+            "start": "03-11",
+            "end": "03-31"
+          },
+          {
+            "start": "10-18",
+            "end": "10-29"
+          },
+          {
+            "start": "12-19",
+            "end": "12-31"
+          }
+        ],
+        "dateRangesDisplay": [
+          "Mar 11–31",
+          "Oct 18–29",
+          "Dec 19–31"
+        ],
+        "interpretation": "Isis is the throne (her name is the seat), the magician, the widow who finds the pieces, the mother of the living Horus, and — in the sky — Sopdet. The parlor table's 'intuition and healing' is real enough as a tone. Historically she is also politically vast, especially in the Greco-Roman world. In this overlay you retrieve, name, and refuse to let a story end when it is only broken.",
+        "counsel": "Use the name. Speak what you are restoring. A silent Isis still works, but the child needs to hear you."
+      },
+      {
+        "id": 7,
+        "name": "Thoth",
+        "egyptianName": "Djehuty",
+        "domain": "Writing, the moon, reckoning, the 365-day year",
+        "dateRanges": [
+          {
+            "start": "04-01",
+            "end": "04-19"
+          },
+          {
+            "start": "11-08",
+            "end": "11-17"
+          }
+        ],
+        "dateRangesDisplay": [
+          "Apr 1–19",
+          "Nov 8–17"
+        ],
+        "interpretation": "Thoth is ibis and baboon, scribe of Maat, the one later stories credit with winning the five epagomenal days from the moon so Nut could give birth. The parlor overlay's 'wisdom' is the schoolbook version. As a natal flavor: you reckon, you mediate, you would rather a table of days than a sword. The vice is cleverness that never lands in a body.",
+        "counsel": "Write it down, then live it. A perfect calendar that no one inhabits is a dead bird."
+      },
+      {
+        "id": 8,
+        "name": "Horus",
+        "egyptianName": "Hor",
+        "domain": "Kingship, the living eye, sky, rightful force",
+        "dateRanges": [
+          {
+            "start": "04-20",
+            "end": "05-07"
+          },
+          {
+            "start": "08-12",
+            "end": "08-19"
+          }
+        ],
+        "dateRangesDisplay": [
+          "Apr 20 – May 7",
+          "Aug 12–19"
+        ],
+        "interpretation": "Horus is the falcon, the living king, the eye restored. The parlor table reads vision and courage; that is fair as far as it goes. Historically there are many Horuses (the child, the elder, the one of Behdet). In this overlay you are asked to see from a height and to take a throne that is also a duty. Ambition without the eye's restoration is just a hawk on a corpse.",
+        "counsel": "Look first, strike second. An eye that is only a weapon is not wadjet."
+      },
+      {
+        "id": 9,
+        "name": "Anubis",
+        "egyptianName": "Inpu",
+        "domain": "Embalming, the path of the dead, thresholds, weighing-day",
+        "dateRanges": [
+          {
+            "start": "05-08",
+            "end": "05-27"
+          },
+          {
+            "start": "06-29",
+            "end": "07-13"
+          }
+        ],
+        "dateRangesDisplay": [
+          "May 8–27",
+          "Jun 29 – Jul 13"
+        ],
+        "interpretation": "Anubis is the jackal of the necropolis, opener of the ways, the one who wraps and weighs. The parlor overlay's 'mystery' is marketing; the historical job is technical and tender — you keep a body from rotting so a soul can travel. In this table you are a guardian of passages, good at other people's endings, at risk of living only in vestibules.",
+        "counsel": "Walk people through, then come back. A psychopomp who never returns to the living town becomes a ghost of the craft."
+      },
+      {
+        "id": 10,
+        "name": "Seth",
+        "egyptianName": "Setesh",
+        "domain": "Storm, desert, strength in the night-bark, necessary disorder",
+        "dateRanges": [
+          {
+            "start": "05-28",
+            "end": "06-18"
+          },
+          {
+            "start": "09-28",
+            "end": "10-02"
+          }
+        ],
+        "dateRangesDisplay": [
+          "May 28 – Jun 18",
+          "Sep 28 – Oct 2"
+        ],
+        "interpretation": "Seth is the red land, the storm, the murderer of Osiris, and also the god who spears Apep in the bow of Ra. The parlor table's 'disruption' is the cartoon. As an overlay: you are natal to the unassimilable — the force a court needs and will not thank. Use the desert's honesty; refuse the cheap role of villain in someone else's morality play.",
+        "counsel": "Pick the serpent, not the brother, as your opponent. Strength that only knows how to scatter will never be let on the boat."
+      },
+      {
+        "id": 11,
+        "name": "Bastet",
+        "egyptianName": "Bastet",
+        "domain": "Protection, festivity, the cat, the milder solar eye",
+        "dateRanges": [
+          {
+            "start": "07-14",
+            "end": "07-28"
+          },
+          {
+            "start": "09-23",
+            "end": "09-27"
+          },
+          {
+            "start": "10-03",
+            "end": "10-17"
+          }
+        ],
+        "dateRangesDisplay": [
+          "Jul 14–28",
+          "Sep 23–27",
+          "Oct 3–17"
+        ],
+        "interpretation": "Bastet is the cat of Bubastis, perfume, music, the eye of Ra in a form that will sit in a lap and still kill a snake. The parlor overlay's 'sensual harmony' is half the temple festival; the other half is protection. In this table you keep a house livable. Note that 14–18 July in the real calendar are epagomenal, not 'Bastet days' — the parlor ranges ignore Heriu Renpet. Keep both layers and do not flatten them.",
+        "counsel": "Play, then keep watch. A cat that only lounges is not Bastet; a cat that only hunts is Sekhmet in denial."
+      },
+      {
+        "id": 12,
+        "name": "Sekhmet",
+        "egyptianName": "Sekhmet",
+        "domain": "Plague and its pacifying, the lioness eye, fierce medicine",
+        "dateRanges": [
+          {
+            "start": "07-29",
+            "end": "08-11"
+          },
+          {
+            "start": "10-30",
+            "end": "11-07"
+          }
+        ],
+        "dateRangesDisplay": [
+          "Jul 29 – Aug 11",
+          "Oct 30 – Nov 7"
+        ],
+        "interpretation": "Sekhmet is the powerful one, lioness of plague and of physicians, the eye sent out to destroy that must be made drunk to stop. Epagomenal rites include 'Pacifying Sekhmet.' The parlor overlay's 'fierce healing' is closer to the history than most of this list. In this table you are natal to heat that can cauterize. Unpacified, you scorch the field you meant to save.",
+        "counsel": "Dose the fire. Physicians of this goddess heal because they know the plague, not because they are the plague."
+      }
+    ]
+  }
+};
+
+/**
+ * Hour-Stars — Sothic civil calendar engine
+ * Wepet Renpet = July 19 (Memphis convention). 365-day template.
+ * Days 1–360 → 36 decans; 361–365 → epagomenal Osiris→Nephthys.
+ * Feb 29 folds to Feb 28 for natal stability.
+ */
+(function (global) {
+  const HS = (global.HS = global.HS || {});
+
+  const MONTHS = [
+    { i: 1, season: "Akhet", seasonName: "Inundation", roman: "I", name: "Thoth" },
+    { i: 2, season: "Akhet", seasonName: "Inundation", roman: "II", name: "Paopi" },
+    { i: 3, season: "Akhet", seasonName: "Inundation", roman: "III", name: "Hathor" },
+    { i: 4, season: "Akhet", seasonName: "Inundation", roman: "IV", name: "Koiak" },
+    { i: 5, season: "Peret", seasonName: "Emergence", roman: "I", name: "Tobi" },
+    { i: 6, season: "Peret", seasonName: "Emergence", roman: "II", name: "Mechir" },
+    { i: 7, season: "Peret", seasonName: "Emergence", roman: "III", name: "Pamenot" },
+    { i: 8, season: "Peret", seasonName: "Emergence", roman: "IV", name: "Parmutit" },
+    { i: 9, season: "Shemu", seasonName: "Harvest", roman: "I", name: "Pachons" },
+    { i: 10, season: "Shemu", seasonName: "Harvest", roman: "II", name: "Payni" },
+    { i: 11, season: "Shemu", seasonName: "Harvest", roman: "III", name: "Epip" },
+    { i: 12, season: "Shemu", seasonName: "Harvest", roman: "IV", name: "Mesore" }
+  ];
+
+  const EPAG_META = [
+    { i: 1, id: "osiris", name: "Osiris" },
+    { i: 2, id: "horus", name: "Horus" },
+    { i: 3, id: "seth", name: "Seth" },
+    { i: 4, id: "isis", name: "Isis" },
+    { i: 5, id: "nephthys", name: "Nephthys" }
+  ];
+
+  const ASPECTS = [
+    { dist: 0, key: "conjunction", name: "Conjunction", egyptian: "Same decade", degrees: 0, tone: "fusion",
+      counsel: "Sky and birth share a decade. Amplify what you already are — do not invent a new self for the day." },
+    { dist: 1, key: "adjacent", name: "Adjacent", egyptian: "Neighbor on the clock", degrees: 10, tone: "near",
+      counsel: "A neighboring hour-star brushes yours. Small adjustments land; grand reinventions can wait." },
+    { dist: 2, key: "near", name: "Close", egyptian: "Two weeks of sky", degrees: 20, tone: "near",
+      counsel: "Near enough to feel kinship. Borrow a tool from today's star without abandoning your own craft." },
+    { dist: 3, key: "semisextile", name: "Semi-sextile", egyptian: "A month's turn", degrees: 30, tone: "mild",
+      counsel: "A mild turn of the wheel. Practice one quiet discipline that tomorrow's self will thank you for." },
+    { dist: 4, key: "novile", name: "Wide month", egyptian: "A growing angle", degrees: 40, tone: "mild",
+      counsel: "The angle widens. Stretch toward something unfinished; do not force a breakthrough." },
+    { dist: 5, key: "opening", name: "Opening", egyptian: "Fifty degrees of river", degrees: 50, tone: "mixed",
+      counsel: "The river opens. Leave room for interruption — some messages arrive by wrong channel." },
+    { dist: 6, key: "sextile", name: "Sextile", egyptian: "Harmonic sixth", degrees: 60, tone: "gift",
+      counsel: "A gift angle. Collaboration and learning favor you; ask the question you have been postponing." },
+    { dist: 7, key: "wide-sextile", name: "Wide sextile", egyptian: "Past the gift", degrees: 70, tone: "gift",
+      counsel: "The gift still runs, slightly past peak. Finish a courtesy or a lesson while the current holds." },
+    { dist: 8, key: "approaching-square", name: "Approaching square", egyptian: "The bank steepens", degrees: 80, tone: "tension",
+      counsel: "Tension builds. Name the friction early so it does not become a cliff by nightfall." },
+    { dist: 9, key: "square", name: "Square", egyptian: "Right angle of the wheel", degrees: 90, tone: "tension",
+      counsel: "A square on the 36-wheel. Push against something solid — not against people who cannot move." },
+    { dist: 10, key: "wide-square", name: "Wide square", egyptian: "The crossing eases", degrees: 100, tone: "tension",
+      counsel: "The hard angle softens. Extract the lesson; release the argument." },
+    { dist: 11, key: "approaching-trine", name: "Approaching trine", egyptian: "Toward the current", degrees: 110, tone: "gift",
+      counsel: "Ease approaches. Align with a flow already in motion rather than digging a new canal." },
+    { dist: 12, key: "trine", name: "Trine", egyptian: "The easy current", degrees: 120, tone: "gift",
+      counsel: "Trine weather. Work that usually resists will glide — do the real work, not only the pleasant work." },
+    { dist: 13, key: "wide-trine", name: "Wide trine", egyptian: "The current still runs", degrees: 130, tone: "gift",
+      counsel: "Grace lingers. Share credit; the easy current is rarely a solo craft." },
+    { dist: 14, key: "sesquisquare", name: "Sesquisquare", egyptian: "An awkward bank", degrees: 140, tone: "mixed",
+      counsel: "Awkward footing. Check assumptions before you leap; a small map beats a brave stumble." },
+    { dist: 15, key: "quincunx", name: "Quincunx", egyptian: "Unjoined houses", degrees: 150, tone: "mixed",
+      counsel: "Unjoined houses. Two parts of life refuse to talk — translate between them patiently." },
+    { dist: 16, key: "far-bank", name: "Far bank", egyptian: "Almost across", degrees: 160, tone: "polarity",
+      counsel: "Almost opposite. Notice what you reject in today's star; it may be a missing piece of yours." },
+    { dist: 17, key: "near-opposition", name: "Near opposition", egyptian: "The other shore", degrees: 170, tone: "polarity",
+      counsel: "Near opposition. Mirror work: what you meet across the river is a teacher, not an enemy." },
+    { dist: 18, key: "opposition", name: "Opposition", egyptian: "Across the river", degrees: 180, tone: "polarity",
+      counsel: "Full opposition on the wheel. Hold both shores. Integration, not victory, is the day's craft." }
+  ];
+
+  const DIM = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const GREG_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const GREG_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  function isGregorianLeap(year) {
+    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+  }
+
+  function daysInMonth(year, month) {
+    if (month === 2) return isGregorianLeap(year) ? 29 : 28;
+    return DIM[month];
+  }
+
+  function dayOfYearCommon(m, d) {
+    if (m === 2 && d === 29) d = 28;
+    let n = d;
+    for (let i = 1; i < m; i++) n += DIM[i];
+    return n;
+  }
+
+  /** Sothic day 1…365. Jul 19 → 1; Jul 14 → 361; Jul 18 → 365. */
+  function sothicDay(m, d) {
+    const doy = dayOfYearCommon(m, d);
+    const wepet = 200; // Jul 19 in common year
+    if (doy >= wepet) return doy - wepet + 1;
+    return 166 + doy;
+  }
+
+  function mdValue(m, d) { return m * 100 + d; }
+
+  function inRange(m, d, start, end) {
+    const [sm, sd] = String(start).split("-").map(Number);
+    const [em, ed] = String(end).split("-").map(Number);
+    const v = mdValue(m, d);
+    const a = mdValue(sm, sd);
+    const b = mdValue(em, ed);
+    if (a <= b) return v >= a && v <= b;
+    return v >= a || v <= b;
+  }
+
+  function overlayDeity(month, day) {
+    const parlor = (HS.data && HS.data.parlor) || {};
+    const list = parlor.deities || [];
+    const m = Number(month), d = Number(day);
+    for (let i = 0; i < list.length; i++) {
+      const ranges = list[i].dateRanges || [];
+      for (let r = 0; r < ranges.length; r++) {
+        if (inRange(m, d, ranges[r].start, ranges[r].end)) return list[i];
+      }
+    }
+    return null;
+  }
+
+  function getDecan(id) {
+    const list = (HS.data && HS.data.decans) || [];
+    return list.find(function (x) { return x.id === id; }) || null;
+  }
+
+  function getEpagDay(index) {
+    const days = (HS.data && HS.data.epagomenal && HS.data.epagomenal.days) || [];
+    return days.find(function (x) { return x.id === index; }) || null;
+  }
+
+  function civilFromMD(month, day, year) {
+    const m = Number(month);
+    const d = Number(day);
+    const y = year == null || year === "" ? null : Number(year);
+    const dayOfYear = sothicDay(m, d);
+    const leapFold = m === 2 && d === 29;
+    const overlay = overlayDeity(m, d);
+
+    if (dayOfYear <= 360) {
+      const monthIndex = Math.ceil(dayOfYear / 30) - 1;
+      const monthMeta = MONTHS[monthIndex];
+      const dayOfMonth = ((dayOfYear - 1) % 30) + 1;
+      const decanId = Math.ceil(dayOfYear / 10);
+      const dayOfDecan = ((dayOfYear - 1) % 10) + 1;
+      const decan = getDecan(decanId);
+      return {
+        kind: "civil",
+        date: { y: y, m: m, d: d },
+        dayOfYear: dayOfYear,
+        leapFold: leapFold,
+        month: monthMeta.i,
+        monthMeta: monthMeta,
+        dayOfMonth: dayOfMonth,
+        decanId: decanId,
+        dayOfDecan: dayOfDecan,
+        decan: decan,
+        season: monthMeta.season,
+        seasonName: monthMeta.seasonName,
+        overlay: overlay,
+        epagomenal: null,
+        egyptianShort: monthMeta.roman + " " + monthMeta.season + " " + dayOfMonth
+      };
+    }
+
+    const epagIndex = dayOfYear - 360;
+    const meta = EPAG_META[epagIndex - 1];
+    const epag = getEpagDay(epagIndex);
+    return {
+      kind: "epagomenal",
+      date: { y: y, m: m, d: d },
+      dayOfYear: dayOfYear,
+      leapFold: leapFold,
+      month: 13,
+      monthMeta: { i: 13, season: "Heriu-Renpet", seasonName: "Days upon the year", roman: "", name: "Epagomenal" },
+      dayOfMonth: epagIndex,
+      decanId: null,
+      dayOfDecan: epagIndex,
+      decan: null,
+      season: "Heriu-Renpet",
+      seasonName: "Days upon the year",
+      overlay: overlay,
+      epagomenal: Object.assign({}, meta, epag || {}),
+      egyptianShort: (epag && epag.translation) || meta.name
+    };
+  }
+
+  function fromYmd(year, month, day) {
+    const y = Number(year);
+    const m = Number(month);
+    const d = Number(day);
+    if (!m || !d) return null;
+    const max = daysInMonth(y || 2024, m);
+    if (d < 1 || d > max || m < 1 || m > 12) return null;
+    return civilFromMD(m, d, y);
+  }
+
+  function today(now) {
+    const n = now || new Date();
+    return civilFromMD(n.getMonth() + 1, n.getDate(), n.getFullYear());
+  }
+
+  function aspectBetween(natalDecan, currentDecan) {
+    if (natalDecan == null || currentDecan == null) {
+      return {
+        dist: null, delta: null, key: "threshold", name: "Off the wheel",
+        egyptian: "Epagomenal — no 36-step delta", degrees: null, tone: "liminal",
+        counsel: "One of you stands in the five days upon the year. Treat the day as liminal: fewer plans, clearer vows.",
+        natal: natalDecan, current: currentDecan
+      };
+    }
+    const n = Number(natalDecan);
+    const c = Number(currentDecan);
+    const delta = ((c - n) % 36 + 36) % 36;
+    const dist = Math.min(delta, 36 - delta);
+    const meta = ASPECTS[dist];
+    let name = meta.name;
+    if (dist === 9 && delta === 27) name = "Waning square";
+    else if (dist === 9 && delta === 9) name = "Waxing square";
+    else if (dist === 12 && delta === 24) name = "Waning trine";
+    else if (dist === 6 && delta === 30) name = "Waning sextile";
+    return Object.assign({ natal: n, current: c, delta: delta }, meta, { name: name });
+  }
+
+  function formatGregorian(y, m, d) {
+    const base = GREG_MONTHS[m - 1] + " " + d;
+    return y ? base + ", " + y : base;
+  }
+
+  function formatShort(y, m, d) {
+    const base = GREG_SHORT[m - 1] + " " + d;
+    return y ? base + ", " + y : base;
+  }
+
+  function hash32(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  HS.engine = {
+    MONTHS: MONTHS,
+    EPAG_META: EPAG_META,
+    ASPECTS: ASPECTS,
+    GREG_MONTHS: GREG_MONTHS,
+    GREG_SHORT: GREG_SHORT,
+    isGregorianLeap: isGregorianLeap,
+    daysInMonth: daysInMonth,
+    sothicDay: sothicDay,
+    civilFromMD: civilFromMD,
+    fromYmd: fromYmd,
+    today: today,
+    aspectBetween: aspectBetween,
+    overlayDeity: overlayDeity,
+    getDecan: getDecan,
+    getEpagDay: getEpagDay,
+    formatGregorian: formatGregorian,
+    formatShort: formatShort,
+    hash32: hash32
+  };
+})(typeof window !== "undefined" ? window : globalThis);
+
+/**
+ * Hour-Stars — UI & routing (offline, vanilla)
+ */
+(function () {
+  const HS = window.HS = window.HS || {};
+  HS.data = window.HS_DATA;
+
+  const STORAGE_KEY = "hourstars.chart.v1";
+  const $ = function (sel, el) { return (el || document).querySelector(sel); };
+  const $$ = function (sel, el) { return Array.from((el || document).querySelectorAll(sel)); };
+
+  const state = {
+    view: "home",
+    chart: null,
+    learnTab: "timeline"
+  };
+
+  function loadChart() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const saved = JSON.parse(raw);
+      if (!saved || !saved.month || !saved.day) return null;
+      const civil = HS.engine.fromYmd(saved.year, saved.month, saved.day);
+      if (!civil) return null;
+      return { name: saved.name || "", year: saved.year, month: saved.month, day: saved.day, showParlor: !!saved.showParlor, civil: civil };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function saveChart(payload) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      name: payload.name || "",
+      year: payload.year,
+      month: payload.month,
+      day: payload.day,
+      showParlor: !!payload.showParlor
+    }));
+  }
+
+  function seasonClass(season) {
+    if (season === "Akhet") return "akhet";
+    if (season === "Peret") return "peret";
+    if (season === "Shemu") return "shemu";
+    if (season === "Heriu-Renpet") return "epag";
+    return "";
+  }
+
+  function signTitle(civil) {
+    if (!civil) return "—";
+    if (civil.kind === "epagomenal") {
+      return (civil.epagomenal && (civil.epagomenal.egyptianName || civil.epagomenal.translation)) || "Epagomenal day";
+    }
+    return civil.decan ? civil.decan.egyptianName : "—";
+  }
+
+  function signTranslation(civil) {
+    if (!civil) return "";
+    if (civil.kind === "epagomenal") {
+      return (civil.epagomenal && civil.epagomenal.translation) || "Day upon the year";
+    }
+    return civil.decan ? civil.decan.translation : "";
+  }
+
+  function signTheme(civil) {
+    if (!civil) return "";
+    if (civil.kind === "epagomenal") return (civil.epagomenal && civil.epagomenal.theme) || "";
+    return civil.decan ? civil.decan.theme : "";
+  }
+
+  function signInterpretation(civil) {
+    if (!civil) return "";
+    if (civil.kind === "epagomenal") return (civil.epagomenal && civil.epagomenal.interpretation) || "";
+    return civil.decan ? civil.decan.interpretation : "";
+  }
+
+  function signCounsel(civil) {
+    if (!civil) return "";
+    if (civil.kind === "epagomenal") return (civil.epagomenal && civil.epagomenal.counsel) || "";
+    return civil.decan ? civil.decan.counsel : "";
+  }
+
+  function setView(name) {
+    state.view = name;
+    $$(".view").forEach(function (v) {
+      v.classList.toggle("active", v.dataset.view === name);
+    });
+    $$(".nav button").forEach(function (b) {
+      b.classList.toggle("active", b.dataset.nav === name);
+    });
+    if (name === "chart") renderChart();
+    if (name === "today") renderToday();
+    if (name === "learn") renderLearn();
+    if (name === "find") populateDays();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function populateDays() {
+    const month = Number($("#birth-month").value);
+    const year = Number($("#birth-year").value) || 2000;
+    const daySel = $("#birth-day");
+    const prev = Number(daySel.value) || 1;
+    const max = HS.engine.daysInMonth(year, month || 1);
+    daySel.innerHTML = "";
+    for (let d = 1; d <= max; d++) {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = d;
+      daySel.appendChild(opt);
+    }
+    daySel.value = String(Math.min(prev, max));
+  }
+
+  function onFindSubmit(e) {
+    e.preventDefault();
+    const name = ($("#birth-name").value || "").trim();
+    const month = Number($("#birth-month").value);
+    const day = Number($("#birth-day").value);
+    const year = Number($("#birth-year").value);
+    const err = $("#find-error");
+    err.textContent = "";
+    if (!month || !day || !year || year < 1 || year > 2100) {
+      err.textContent = "Enter a valid birth date.";
+      return;
+    }
+    const civil = HS.engine.fromYmd(year, month, day);
+    if (!civil) {
+      err.textContent = "That date could not be mapped. Check the day for this month.";
+      return;
+    }
+    const showParlor = !!(document.getElementById("parlor-opt-in") && document.getElementById("parlor-opt-in").checked);
+    state.chart = { name: name, year: year, month: month, day: day, showParlor: showParlor, civil: civil };
+    saveChart(state.chart);
+    setView("chart");
+  }
+
+  function renderChart() {
+    const root = $("#chart-root");
+    if (!state.chart) {
+      root.innerHTML =
+        '<div class="card gold-edge">' +
+        '<h2>No Decan Passport yet</h2>' +
+        '<p class="muted">Find your hour-star from a birth date. Your primary identity is one of 36 natal decans (or an epagomenal birth)—not a parlor sun sign.</p>' +
+        '<div class="btn-row" style="justify-content:flex-start;margin-top:14px">' +
+        '<button class="btn primary" data-go="find">Find my hour-star</button>' +
+        '</div></div>';
+      return;
+    }
+    const c = state.chart.civil;
+    const nameLine = state.chart.name
+      ? '<p class="muted small">Chart for <strong style="color:var(--text)">' + escapeHtml(state.chart.name) + "</strong> · " +
+        HS.engine.formatGregorian(state.chart.year, state.chart.month, state.chart.day) + "</p>"
+      : '<p class="muted small">' + HS.engine.formatGregorian(state.chart.year, state.chart.month, state.chart.day) + "</p>";
+
+    const isEpag = c.kind === "epagomenal";
+    const numLabel = isEpag
+      ? "Epagomenal day " + c.dayOfMonth + " of 5"
+      : "Decan " + c.decanId + " of 36 · day " + c.dayOfDecan + " of 10";
+
+    const seasonBadge = '<span class="badge ' + seasonClass(c.season) + '">' +
+      escapeHtml(c.season) + (c.seasonName ? " · " + escapeHtml(c.seasonName) : "") + "</span>";
+
+    const civilBadge = isEpag
+      ? '<span class="badge epag">Outside the months</span>'
+      : '<span class="badge">' + escapeHtml(c.egyptianShort) + "</span>";
+
+    const showParlor = !!state.chart.showParlor;
+    const parlor = (showParlor && c.overlay)
+      ? '<span class="badge parlor" title="Modern parlor overlay">Guardian overlay: ' + escapeHtml(c.overlay.name) + "</span>"
+      : "";
+    const teachingChip = '<span class="badge">Teaching Sothic year (schematic)</span>';
+    const reconChip = '<span class="badge parlor">Reconstruction</span>';
+
+    const translit = (!isEpag && c.decan && c.decan.transliteration)
+      ? '<p class="decan-trans">' + escapeHtml(c.decan.transliteration) + "</p>"
+      : (isEpag && c.epagomenal && c.epagomenal.transliteration)
+        ? '<p class="decan-trans">' + escapeHtml(c.epagomenal.transliteration) + "</p>"
+        : "";
+
+    const leapNote = c.leapFold
+      ? '<p class="tiny muted">Feb 29 folded to Feb 28 for natal stability on the 365-day template.</p>'
+      : "";
+
+    const parlorCard = (showParlor && c.overlay)
+      ? '<div class="card">' +
+        '<h3>Modern overlay · ' + escapeHtml(c.overlay.name) + ' <span class="badge parlor">Modern overlay</span></h3>' +
+        '<p class="small muted">Modern 12-guardian teaching aid — not pharaonic natal law, not Dendera. Secondary to your decan (H1).</p>' +
+        '<p>' + escapeHtml(c.overlay.domain || "") + "</p>" +
+        '<p class="small">' + escapeHtml(c.overlay.interpretation || "") + "</p>" +
+        (c.overlay.counsel ? '<div class="counsel">' + escapeHtml(c.overlay.counsel) + "</div>" : "") +
+        "</div>"
+      : "";
+
+    root.innerHTML =
+      '<div class="card gold-edge">' +
+      '<div class="chart-hero">' +
+      nameLine +
+      '<div class="decan-number">' + escapeHtml(numLabel) + "</div>" +
+      '<h2 class="decan-name">' + escapeHtml(signTitle(c)) + "</h2>" +
+      translit +
+      '<p class="theme-line">' + escapeHtml(signTranslation(c)) + "</p>" +
+      '<p class="muted" style="margin:0 0 12px">' + escapeHtml(signTheme(c)) + "</p>" +
+      '<div class="badge-row">' + seasonBadge + civilBadge + teachingChip + parlor + "</div>" +
+      leapNote +
+      "</div>" +
+      '<div class="reading">' +
+      '<div class="badge-row" style="justify-content:flex-start;margin-bottom:10px">' + reconChip +
+      '<span class="badge">Historical strip · ceiling name</span></div>' +
+      "<p>" + escapeHtml(signInterpretation(c)) + "</p>" +
+      '<p class="tiny muted" style="margin:0 0 8px">Counsel below is reconstructed living practice.</p>' +
+      '<div class="counsel">' + escapeHtml(signCounsel(c)) + "</div>" +
+      '<p class="small muted" style="margin-top:14px">Pharaonic Egypt used this name in sky clocks and temple ceilings. The personality counsel is a modern reconstruction for practice and teaching.</p>' +
+      '<button class="pill-link" data-go="learn" data-learn="honesty">Why this system? →</button>' +
+      "</div></div>" +
+      parlorCard +
+      '<div class="btn-row" style="justify-content:flex-start;margin:8px 0 0">' +
+      '<button class="btn ghost small" data-go="find">Recast chart</button>' +
+      '<button class="btn small" data-go="today">See today</button>' +
+      "</div>";
+  }
+
+  function renderWheel(natalId, currentId) {
+    const size = 280;
+    const cx = 140, cy = 140, r = 112;
+    const ticks = [];
+    for (let i = 0; i < 36; i++) {
+      const ang = (-90 + i * 10) * Math.PI / 180;
+      const x1 = cx + Math.cos(ang) * (r - 8);
+      const y1 = cy + Math.sin(ang) * (r - 8);
+      const x2 = cx + Math.cos(ang) * r;
+      const y2 = cy + Math.sin(ang) * r;
+      const major = i % 3 === 0;
+      ticks.push('<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) +
+        '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) +
+        '" stroke="' + (major ? "rgba(212,175,55,0.55)" : "rgba(255,255,255,0.15)") +
+        '" stroke-width="' + (major ? 2 : 1) + '"/>');
+    }
+    function marker(id, color, label) {
+      if (id == null) return "";
+      const ang = (-90 + (id - 1) * 10) * Math.PI / 180;
+      const x = cx + Math.cos(ang) * (r - 28);
+      const y = cy + Math.sin(ang) * (r - 28);
+      return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) +
+        '" r="8" fill="' + color + '" stroke="#070b16" stroke-width="2"/>' +
+        '<text x="' + x.toFixed(1) + '" y="' + (y + 22).toFixed(1) +
+        '" text-anchor="middle" fill="' + color + '" font-size="10" font-family="system-ui">' +
+        label + "</text>";
+    }
+    const same = natalId != null && natalId === currentId;
+    return '<svg class="wheel" viewBox="0 0 ' + size + " " + size + '" aria-hidden="true">' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="rgba(0,0,0,0.25)" stroke="rgba(212,175,55,0.35)" stroke-width="2"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="70" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>' +
+      ticks.join("") +
+      marker(natalId, "#d4af37", same ? "You / Now" : "You") +
+      (same ? "" : marker(currentId, "#7eb6ff", "Now")) +
+      '<text x="' + cx + '" y="' + (cy + 4) + '" text-anchor="middle" fill="rgba(232,212,139,0.85)" font-size="12" font-family="Georgia,serif">36</text>' +
+      "</svg>";
+  }
+
+  function dailyBlend(natalCivil, todayCivil, aspect) {
+    const seed = HS.engine.hash32(
+      [todayCivil.date.y, todayCivil.date.m, todayCivil.date.d,
+        natalCivil.decanId || ("e" + (natalCivil.epagomenal && natalCivil.epagomenal.i)),
+        todayCivil.decanId || ("e" + (todayCivil.epagomenal && todayCivil.epagomenal.i))
+      ].join("|")
+    );
+    const tips = [
+      "Light a single candle and name one thing you will finish before sleep.",
+      "Drink water as if it were the inundation — slowly, gratefully.",
+      "Write three lines: what rises, what settles, what you harvest.",
+      "Walk outside and find the brightest star you can. Borrow its patience.",
+      "Give one true compliment that costs you nothing but attention.",
+      "Leave one message unanswered until Maat (balance) returns to your breath."
+    ];
+    const tip = tips[seed % tips.length];
+    const todayCounsel = signCounsel(todayCivil);
+    const aspectCounsel = aspect.counsel || "";
+    return {
+      headline: aspect.name,
+      body: "Today's sky sits under " + signTitle(todayCivil) +
+        (todayCivil.kind === "civil" ? " (decan " + todayCivil.decanId + ")" : "") +
+        ". Your natal mark is " + signTitle(natalCivil) + ". " +
+        aspect.egyptian + " · " + (aspect.degrees != null ? aspect.degrees + "° on the 36-wheel." : "liminal seam."),
+      counsel: aspectCounsel,
+      skyNote: todayCounsel,
+      tip: tip,
+      tone: aspect.tone || "mixed"
+    };
+  }
+
+  function renderToday() {
+    const root = $("#today-root");
+    const today = HS.engine.today();
+    if (!state.chart) {
+      root.innerHTML =
+        '<div class="card gold-edge">' +
+        '<h2>Today\'s sky</h2>' +
+        '<p class="muted">Cast your natal hour-star to compare today\'s decan on the 36-wheel.</p>' +
+        '<p><strong style="color:var(--gold-soft)">' + escapeHtml(signTitle(today)) + "</strong> · " +
+        escapeHtml(signTheme(today)) + "</p>" +
+        '<div class="btn-row" style="justify-content:flex-start;margin-top:14px">' +
+        '<button class="btn primary" data-go="find">Find my hour-star</button>' +
+        "</div></div>";
+      return;
+    }
+    const natal = state.chart.civil;
+    const aspect = HS.engine.aspectBetween(natal.decanId, today.decanId);
+    const blend = dailyBlend(natal, today, aspect);
+
+    root.innerHTML =
+      '<div class="card gold-edge">' +
+      '<h2>Today</h2>' +
+      '<p class="muted small">' + HS.engine.formatGregorian(today.date.y, today.date.m, today.date.d) +
+      " · Sothic day " + today.dayOfYear + "</p>" +
+      '<div class="today-compare">' +
+      '<div class="side"><div class="lbl">Your natal</div><div class="nm">' + escapeHtml(signTitle(natal)) + "</div>" +
+      '<div class="tiny muted">' + escapeHtml(signTheme(natal)) + "</div></div>" +
+      '<div class="side"><div class="lbl">Sky now</div><div class="nm">' + escapeHtml(signTitle(today)) + "</div>" +
+      '<div class="tiny muted">' + escapeHtml(signTheme(today)) + "</div></div>" +
+      "</div>" +
+      '<div class="wheel-wrap">' + renderWheel(natal.decanId, today.decanId) + "</div>" +
+      '<div class="aspect-meta">' +
+      '<p class="aspect-name tone-' + escapeHtml(blend.tone) + '">' + escapeHtml(blend.headline) + "</p>" +
+      '<p class="small muted">' + escapeHtml(blend.body) + "</p>" +
+      "</div>" +
+      '<div class="reading">' +
+      '<div class="badge-row" style="justify-content:flex-start;margin-bottom:10px">' +
+      '<span class="badge parlor">Reconstruction</span>' +
+      '<span class="badge">Sky fact · teaching calendar</span></div>' +
+      '<div class="counsel">' + escapeHtml(blend.counsel) + "</div>" +
+      '<p style="margin-top:14px">' + escapeHtml(blend.skyNote) + "</p>" +
+      '<p class="small muted">Practice prompt: ' + escapeHtml(blend.tip) + "</p>" +
+      '<button class="pill-link" data-go="learn" data-learn="decan">Learn more: what is a decan? →</button>' +
+      "</div></div>";
+  }
+
+  function renderLearn() {
+    const tab = state.learnTab || "timeline";
+    $$(".chip").forEach(function (c) {
+      c.classList.toggle("active", c.dataset.learn === tab);
+    });
+    $$(".learn-section").forEach(function (s) {
+      s.classList.toggle("active", s.dataset.learn === tab);
+    });
+    if (tab === "gallery") renderGallery();
+    if (tab === "epag") renderEpagLearn();
+  }
+
+  function renderGallery() {
+    const root = $("#gallery-root");
+    const decans = (HS.data && HS.data.decans) || [];
+    root.innerHTML = '<div class="gallery">' + decans.map(function (d) {
+      return '<button class="gallery-item" data-decan="' + d.id + '">' +
+        '<div class="gallery-num">' + d.id + "</div>" +
+        "<div><h4>" + escapeHtml(d.egyptianName) + "</h4>" +
+        '<p>' + escapeHtml(d.theme) + " · " + escapeHtml(d.gregorianApprox) + " · " + escapeHtml(d.season) + "</p>" +
+        "</div></button>";
+    }).join("") + "</div>";
+  }
+
+  function renderEpagLearn() {
+    const root = $("#epag-root");
+    const ep = HS.data.epagomenal;
+    const days = ep.days || [];
+    root.innerHTML =
+      '<p>' + escapeHtml(ep.translation) + ". " + escapeHtml(ep.convention.why) + "</p>" +
+      '<p class="small muted">' + escapeHtml(ep.warning) + "</p>" +
+      '<div class="gallery" style="margin-top:12px">' + days.map(function (d) {
+        return '<div class="gallery-item" style="cursor:default">' +
+          '<div class="gallery-num">' + d.id + "</div>" +
+          "<div><h4>" + escapeHtml(d.translation) + "</h4>" +
+          '<p>' + escapeHtml(d.theme) + " · " + escapeHtml(d.gregorianApprox) + "</p>" +
+          '<p class="small" style="margin-top:6px;color:var(--text)">' + escapeHtml(d.interpretation) + "</p>" +
+          '<div class="counsel" style="margin-top:8px">' + escapeHtml(d.counsel) + "</div>" +
+          "</div></div>";
+      }).join("") + "</div>";
+  }
+
+  function openDecanModal(id) {
+    const d = HS.engine.getDecan(Number(id));
+    if (!d) return;
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+    backdrop.innerHTML =
+      '<div class="modal" role="dialog" aria-modal="true">' +
+      '<button class="modal-close" aria-label="Close">×</button>' +
+      '<div class="decan-number">Decan ' + d.id + " · " + escapeHtml(d.gregorianApprox) + "</div>" +
+      '<h2 class="decan-name" style="font-size:1.5rem">' + escapeHtml(d.egyptianName) + "</h2>" +
+      '<p class="decan-trans">' + escapeHtml(d.transliteration || "") + "</p>" +
+      '<p><strong>' + escapeHtml(d.translation) + "</strong></p>" +
+      '<p class="muted">' + escapeHtml(d.theme) + "</p>" +
+      '<div class="badge-row" style="justify-content:flex-start;margin:12px 0">' +
+      '<span class="badge ' + seasonClass(d.season) + '">' + escapeHtml(d.season) + "</span>" +
+      (d.deityAssociation ? '<span class="badge">' + escapeHtml(d.deityAssociation) + "</span>" : "") +
+      "</div>" +
+      '<div class="badge-row" style="justify-content:flex-start;margin-bottom:8px"><span class="badge parlor">Reconstruction</span></div>' +
+      "<p>" + escapeHtml(d.interpretation) + "</p>" +
+      '<div class="counsel">' + escapeHtml(d.counsel) + "</div>" +
+      (d.notes ? '<p class="small muted" style="margin-top:12px">' + escapeHtml(d.notes) + "</p>" : "") +
+      "</div>";
+    function close() { backdrop.remove(); document.removeEventListener("keydown", onKey); }
+    function onKey(ev) { if (ev.key === "Escape") close(); }
+    backdrop.addEventListener("click", function (ev) { if (ev.target === backdrop) close(); });
+    backdrop.querySelector(".modal-close").addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+    document.body.appendChild(backdrop);
+  }
+
+  function escapeHtml(str) {
+    return String(str == null ? "" : str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function bind() {
+    $$(".nav button").forEach(function (b) {
+      b.addEventListener("click", function () { setView(b.dataset.nav); });
+    });
+    document.body.addEventListener("click", function (ev) {
+      const go = ev.target.closest("[data-go]");
+      if (go) {
+        if (go.dataset.learn) state.learnTab = go.dataset.learn;
+        setView(go.dataset.go);
+        return;
+      }
+      const chip = ev.target.closest(".chip[data-learn]");
+      if (chip) {
+        state.learnTab = chip.dataset.learn;
+        renderLearn();
+        return;
+      }
+      const g = ev.target.closest("[data-decan]");
+      if (g) openDecanModal(g.dataset.decan);
+    });
+    $("#birth-form").addEventListener("submit", onFindSubmit);
+    $("#birth-month").addEventListener("change", populateDays);
+    $("#birth-year").addEventListener("change", populateDays);
+    $(".brand").addEventListener("click", function () { setView("home"); });
+  }
+
+  function init() {
+    if (!HS.data || !HS.engine) {
+      document.body.innerHTML = "<p style='padding:2rem;color:#fff'>Hour-Stars failed to load data.</p>";
+      return;
+    }
+    state.chart = loadChart();
+    bind();
+    populateDays();
+    // Prefill form if chart exists
+    if (state.chart) {
+      $("#birth-name").value = state.chart.name || "";
+      $("#birth-month").value = String(state.chart.month);
+      populateDays();
+      $("#birth-day").value = String(state.chart.day);
+      $("#birth-year").value = String(state.chart.year);
+      const po = document.getElementById("parlor-opt-in");
+      if (po) po.checked = !!state.chart.showParlor;
+    }
+    setView("home");
+
+    // Expose for console tests
+    HS._test = function () {
+      const a = HS.engine.fromYmd(1990, 7, 19);
+      const b = HS.engine.fromYmd(1990, 7, 14);
+      return {
+        jul19: { dayOfYear: a.dayOfYear, decan: a.decanId, name: a.decan && a.decan.egyptianName, season: a.season },
+        jul14: { dayOfYear: b.dayOfYear, kind: b.kind, deity: b.epagomenal && b.epagomenal.deity }
+      };
+    };
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+
+  </script>
+</body>
+</html>
