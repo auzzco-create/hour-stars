@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- Hour-Stars single-file build — open directly in a browser. Source: app/ -->
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -385,8 +384,8 @@ select option { background: #121a32; }
   margin: 12px 0 8px;
 }
 .wheel {
-  width: min(280px, 85vw);
-  height: min(280px, 85vw);
+  width: min(360px, 92vw);
+  height: min(360px, 92vw);
 }
 .aspect-meta {
   text-align: center;
@@ -630,7 +629,7 @@ select option { background: #121a32; }
 .season-peret { --season: var(--peret); }
 .season-shemu { --season: var(--shemu); }
 
-  </style>
+</style>
 </head>
 <body>
   <div class="stars" aria-hidden="true"></div>
@@ -2011,6 +2010,8 @@ window.HS_DATA = {
   }
 };
 
+</script>
+  <script>
 /**
  * Hour-Stars — Sothic civil calendar engine
  * Wepet Renpet = July 19 (Memphis convention). 365-day template.
@@ -2281,6 +2282,8 @@ window.HS_DATA = {
   };
 })(typeof window !== "undefined" ? window : globalThis);
 
+</script>
+  <script>
 /**
  * Hour-Stars — UI & routing (offline, vanilla)
  */
@@ -2504,40 +2507,80 @@ window.HS_DATA = {
   }
 
   function renderWheel(natalId, currentId) {
-    const size = 280;
-    const cx = 140, cy = 140, r = 112;
+    const size = 360;
+    const cx = 180, cy = 180;
+    const r = 112;            // inner dial
+    const bIn = 118, bOut = 142; // decan band
+    const rad = function (deg) { return deg * Math.PI / 180; };
+    const pt = function (rr, deg) { return [cx + Math.cos(rad(deg)) * rr, cy + Math.sin(rad(deg)) * rr]; };
+    const f = function (n) { return n.toFixed(1); };
+    // decan i (1..36) spans angles a0..a1, starting at top (Wepet Renpet) going clockwise
+    const span = function (i) { const a0 = -90 + (i - 1) * 10; return [a0, a0 + 10]; };
+    function seg(r0, r1, a0, a1) {
+      const p1 = pt(r1, a0), p2 = pt(r1, a1), p3 = pt(r0, a1), p4 = pt(r0, a0);
+      const large = (a1 - a0) > 180 ? 1 : 0;
+      return "M" + f(p1[0]) + " " + f(p1[1]) + " A" + r1 + " " + r1 + " 0 " + large + " 1 " + f(p2[0]) + " " + f(p2[1]) +
+        " L" + f(p3[0]) + " " + f(p3[1]) + " A" + r0 + " " + r0 + " 0 " + large + " 0 " + f(p4[0]) + " " + f(p4[1]) + " Z";
+    }
+    const seasons = [
+      { name: "AKHET", sub: "Flood", color: "58,140,190", from: 1 },
+      { name: "PERET", sub: "Growing", color: "86,160,90", from: 13 },
+      { name: "SHEMU", sub: "Harvest", color: "212,150,60", from: 25 }
+    ];
+    const parts = [];
+    // season bands, one cell per decan
+    for (let i = 1; i <= 36; i++) {
+      const s = seasons[Math.floor((i - 1) / 12)];
+      const sp = span(i);
+      const isNatal = i === natalId, isNow = i === currentId;
+      const fillA = isNatal || isNow ? 0.75 : ((Math.floor((i - 1) / 3) % 2) ? 0.22 : 0.32);
+      parts.push('<path d="' + seg(bIn, bOut, sp[0] + 0.6, sp[1] - 0.6) + '" fill="rgba(' + s.color + ',' + fillA + ')"' +
+        (isNatal ? ' stroke="#d4af37" stroke-width="2"' : isNow ? ' stroke="#7eb6ff" stroke-width="2"' : "") + "/>");
+      const mid = pt((bIn + bOut) / 2, sp[0] + 5);
+      parts.push('<text x="' + f(mid[0]) + '" y="' + f(mid[1] + 3) + '" text-anchor="middle" font-size="8.5" font-weight="600" font-family="system-ui" fill="' +
+        (isNatal || isNow ? "#0b1020" : "rgba(255,255,255,0.8)") + '">' + i + "</text>");
+    }
+    // season names on the outside
+    seasons.forEach(function (s) {
+      const midA = -90 + (s.from - 1) * 10 + 60;
+      const p = pt(152, midA);
+      const anc = Math.abs(Math.cos(rad(midA))) < 0.3 ? "middle" : (Math.cos(rad(midA)) > 0 ? "start" : "end");
+      if (anc === "middle") p[1] += 10;
+      parts.push('<text x="' + f(p[0]) + '" y="' + f(p[1] - 1) + '" text-anchor="' + anc + '" font-size="11" letter-spacing="2" font-family="Georgia,serif" fill="rgb(' + s.color + ')">' + s.name + "</text>" +
+        '<text x="' + f(p[0]) + '" y="' + f(p[1] + 10) + '" text-anchor="' + anc + '" font-size="8" font-family="system-ui" fill="rgba(255,255,255,0.55)">' + s.sub + "</text>");
+    });
+    // New Year seam (epagomenal days) + Sopdet star
+    const top1 = pt(bIn - 4, -90), top2 = pt(bOut + 6, -90);
+    parts.push('<line x1="' + f(top1[0]) + '" y1="' + f(top1[1]) + '" x2="' + f(top2[0]) + '" y2="' + f(top2[1]) + '" stroke="#e8d48b" stroke-width="2"/>');
+    const ny = pt(bOut + 14, -90);
+    parts.push('<text x="' + f(ny[0]) + '" y="' + f(ny[1]) + '" text-anchor="middle" font-size="8" font-family="system-ui" fill="#e8d48b">New Year · +5 days</text>');
+    const sp36 = span(36), st = pt(bOut + 10, sp36[0] + 3);
+    parts.push('<text x="' + f(st[0]) + '" y="' + f(st[1] + 4) + '" text-anchor="middle" font-size="13" fill="#fff4c2">✦</text>');
+    // inner ticks at decan boundaries
     const ticks = [];
     for (let i = 0; i < 36; i++) {
-      const ang = (-90 + i * 10) * Math.PI / 180;
-      const x1 = cx + Math.cos(ang) * (r - 8);
-      const y1 = cy + Math.sin(ang) * (r - 8);
-      const x2 = cx + Math.cos(ang) * r;
-      const y2 = cy + Math.sin(ang) * r;
-      const major = i % 3 === 0;
-      ticks.push('<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) +
-        '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) +
-        '" stroke="' + (major ? "rgba(212,175,55,0.55)" : "rgba(255,255,255,0.15)") +
-        '" stroke-width="' + (major ? 2 : 1) + '"/>');
+      const a = -90 + i * 10, major = i % 3 === 0;
+      const p1 = pt(r - (major ? 10 : 6), a), p2 = pt(r, a);
+      ticks.push('<line x1="' + f(p1[0]) + '" y1="' + f(p1[1]) + '" x2="' + f(p2[0]) + '" y2="' + f(p2[1]) +
+        '" stroke="' + (major ? "rgba(212,175,55,0.55)" : "rgba(255,255,255,0.15)") + '" stroke-width="' + (major ? 2 : 1) + '"/>');
     }
     function marker(id, color, label) {
       if (id == null) return "";
-      const ang = (-90 + (id - 1) * 10) * Math.PI / 180;
-      const x = cx + Math.cos(ang) * (r - 28);
-      const y = cy + Math.sin(ang) * (r - 28);
-      return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) +
-        '" r="8" fill="' + color + '" stroke="#070b16" stroke-width="2"/>' +
-        '<text x="' + x.toFixed(1) + '" y="' + (y + 22).toFixed(1) +
-        '" text-anchor="middle" fill="' + color + '" font-size="10" font-family="system-ui">' +
-        label + "</text>";
+      const a = span(id)[0] + 5;
+      const p = pt(r - 30, a);
+      return '<circle cx="' + f(p[0]) + '" cy="' + f(p[1]) + '" r="8" fill="' + color + '" stroke="#070b16" stroke-width="2"/>' +
+        '<text x="' + f(p[0]) + '" y="' + f(p[1] + 21) + '" text-anchor="middle" fill="' + color + '" font-size="10" font-family="system-ui">' + label + "</text>";
     }
     const same = natalId != null && natalId === currentId;
-    return '<svg class="wheel" viewBox="0 0 ' + size + " " + size + '" aria-hidden="true">' +
+    return '<svg class="wheel" viewBox="0 0 ' + size + " " + size + '" role="img" aria-label="The 36 decans around the Egyptian year">' +
+      parts.join("") +
       '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="rgba(0,0,0,0.25)" stroke="rgba(212,175,55,0.35)" stroke-width="2"/>' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="70" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="62" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>' +
       ticks.join("") +
       marker(natalId, "#d4af37", same ? "You / Now" : "You") +
       (same ? "" : marker(currentId, "#7eb6ff", "Now")) +
-      '<text x="' + cx + '" y="' + (cy + 4) + '" text-anchor="middle" fill="rgba(232,212,139,0.85)" font-size="12" font-family="Georgia,serif">36</text>' +
+      '<text x="' + cx + '" y="' + (cy - 2) + '" text-anchor="middle" fill="rgba(232,212,139,0.9)" font-size="15" font-family="Georgia,serif">36</text>' +
+      '<text x="' + cx + '" y="' + (cy + 12) + '" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="8" font-family="system-ui">hour-stars</text>' +
       "</svg>";
   }
 
@@ -2762,6 +2805,6 @@ window.HS_DATA = {
   }
 })();
 
-  </script>
+</script>
 </body>
 </html>
