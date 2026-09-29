@@ -381,11 +381,13 @@ select option { background: #121a32; }
 .wheel-wrap {
   display: flex;
   justify-content: center;
-  margin: 12px 0 8px;
+  margin: 8px -14px 6px;
 }
 .wheel {
-  width: min(400px, 96vw);
-  height: min(400px, 96vw);
+  display: block;
+  width: min(400px, 100%);
+  height: auto;
+  aspect-ratio: 1 / 1;
 }
 .aspect-meta {
   text-align: center;
@@ -628,6 +630,90 @@ select option { background: #121a32; }
 .season-akhet { --season: var(--akhet); }
 .season-peret { --season: var(--peret); }
 .season-shemu { --season: var(--shemu); }
+
+/* Wheel: mode toggle, tap targets, info card */
+.wheel-toggle {
+  display: flex;
+  gap: 4px;
+  margin: 16px auto 4px;
+  padding: 4px;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(0,0,0,0.25);
+}
+.wheel-toggle button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 9px 16px;
+  min-height: 40px;
+  border-radius: 999px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.wheel-toggle button.on {
+  background: linear-gradient(180deg, rgba(212,175,55,0.28), rgba(212,175,55,0.12));
+  color: var(--gold-soft);
+  box-shadow: inset 0 0 0 1px rgba(212,175,55,0.45);
+}
+.wheel-toggle button[data-wmode="night"].on {
+  background: linear-gradient(180deg, rgba(126,182,255,0.26), rgba(126,182,255,0.1));
+  color: #cfe3ff;
+  box-shadow: inset 0 0 0 1px rgba(126,182,255,0.5);
+}
+.wheel-hint {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 8px 4px 0;
+}
+.wheel-hint.night { color: #cfe3ff; font-size: 0.88rem; }
+.wheel-hint strong { color: #fff; font-weight: 600; }
+.wheel text, .wheel line, .wheel circle, .wheel path, .wheel rect { pointer-events: none; }
+.wheel .whit { cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+.wheel .whit .whit-area { pointer-events: all; fill: rgba(0,0,0,0); stroke: none; }
+.wheel .whit .wsel-ring { display: none; fill: rgba(255,255,255,0.14); stroke: #ffffff; stroke-width: 2.2; }
+.wheel .whit.selected .wsel-ring { display: inline; }
+.wheel .whit:focus-visible .wsel-ring { display: inline; stroke-dasharray: 4 3; }
+.wheel .whit.selected:focus-visible .wsel-ring { stroke-dasharray: none; stroke: var(--gold-soft); }
+.wheel-card {
+  margin: 4px 0 8px;
+  padding: 14px 16px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(8,12,26,0.6);
+}
+.wheel-card:empty { display: none; }
+.wc-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.wc-name {
+  font-family: var(--serif);
+  color: var(--gold-soft);
+  font-size: 1.3rem;
+  margin: 4px 0 2px;
+}
+.wc-trans { margin: 0 0 8px; font-style: italic; color: var(--text); font-size: 0.92rem; }
+.wc-dates { margin: 0 0 4px; font-size: 0.9rem; color: var(--muted); }
+.wc-dates strong { color: var(--text); font-weight: 600; white-space: nowrap; }
+.wc-theme { margin: 0 0 10px; font-size: 0.92rem; }
+.wc-badges { justify-content: flex-start; margin-bottom: 12px; }
+.badge.now { border-color: rgba(126,182,255,0.55); color: #cfe3ff; }
+.badge.you { border-color: rgba(212,175,55,0.6); color: var(--gold-soft); }
+.wc-days { list-style: none; padding: 0; margin: 0 0 10px; font-size: 0.9rem; }
+.wc-days li { padding: 3px 0; border-bottom: 1px solid var(--line-soft); }
+.wc-days li span { display: inline-block; min-width: 54px; color: var(--muted); }
+.night-method { margin: 4px 0 8px; }
+.night-method p { margin: 0; line-height: 1.5; }
 
 </style>
 </head>
@@ -2298,7 +2384,9 @@ window.HS_DATA = {
   const state = {
     view: "home",
     chart: null,
-    learnTab: "timeline"
+    learnTab: "timeline",
+    wheelMode: "year",   // "year" | "night" (in memory only)
+    wheelSel: null       // selected wheel key: "d:<id>", "e", or "h:<hour>"
   };
 
   function loadChart() {
@@ -2506,7 +2594,7 @@ window.HS_DATA = {
       "</div>";
   }
 
-  function renderWheel(natalId, currentId) {
+  function renderWheel(natalId, currentId, selKey) {
     const size = 400;
     const cx = 200, cy = 200;
     const r = 112;            // inner dial
@@ -2592,7 +2680,26 @@ window.HS_DATA = {
         '<text x="' + f(p[0]) + '" y="' + f(p[1] + 21) + '" text-anchor="middle" fill="' + color + '" font-size="10" font-family="system-ui">' + label + "</text>";
     }
     const same = natalId != null && natalId === currentId;
-    return '<svg class="wheel" viewBox="0 0 ' + size + " " + size + '" role="img" aria-label="The 36 decans around the Egyptian year">' +
+    // Tap / focus targets: whole wedge (inner dial to just outside the month labels)
+    const hits = [];
+    for (let i = 1; i <= 36; i++) {
+      const d = HS.engine.getDecan(i) || {};
+      const sp = span(i);
+      const key = "d:" + i;
+      const tags = (i === currentId ? " Sky now." : "") + (i === natalId ? " Your natal decan." : "");
+      hits.push('<g class="whit' + (selKey === key ? " selected" : "") + '" data-wsel="' + key + '" tabindex="0" role="button" aria-label="' +
+        escapeHtml("Decan " + i + ", " + (d.egyptianName || "") + ", " + (d.gregorianApprox || "") + ", " + (d.season || "") + "." + tags) + '">' +
+        '<path class="whit-area" d="' + seg(40, 160, sp[0], sp[1]) + '"/>' +
+        '<path class="wsel-ring" d="' + seg(bIn - 3, bOut + 3, sp[0] + 0.3, sp[1] - 0.3) + '"/>' +
+        "</g>");
+    }
+    const ep = (HS.data && HS.data.epagomenal) || {};
+    hits.push('<g class="whit whit-seam' + (selKey === "e" ? " selected" : "") + '" data-wsel="e" tabindex="0" role="button" aria-label="' +
+      escapeHtml("New Year seam: the five days upon the year, " + ((ep.convention && ep.convention.gregorian) || "Jul 14 – Jul 18")) + '">' +
+      '<rect class="whit-area" x="100" y="21" width="200" height="16" rx="8"/>' +
+      '<rect class="wsel-ring" x="100" y="21" width="200" height="16" rx="8"/>' +
+      "</g>");
+    return '<svg class="wheel" viewBox="0 0 ' + size + " " + size + '" role="group" aria-label="The 36 decans around the Egyptian year. Tap a decan for details.">' +
       parts.join("") +
       '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="rgba(0,0,0,0.25)" stroke="rgba(212,175,55,0.35)" stroke-width="2"/>' +
       '<circle cx="' + cx + '" cy="' + cy + '" r="62" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>' +
@@ -2601,7 +2708,269 @@ window.HS_DATA = {
       (same ? "" : marker(currentId, "#7eb6ff", "Now")) +
       '<text x="' + cx + '" y="' + (cy - 2) + '" text-anchor="middle" fill="rgba(232,212,139,0.9)" font-size="15" font-family="Georgia,serif">36</text>' +
       '<text x="' + cx + '" y="' + (cy + 12) + '" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="8" font-family="system-ui">hour-stars</text>' +
+      hits.join("") +
       "</svg>";
+  }
+
+  // ---------- Tonight's hours (simplified night clock) ----------
+  // Approximate sunset/sunrise for ~40°N from the date alone (no location).
+  const NIGHT_LAT = 40;
+  function sunTimes(y, m, d) { // m: 1-12; returns ms timestamps
+    const n = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 0)) / 864e5);
+    const toR = Math.PI / 180;
+    const decl = -23.44 * Math.cos(2 * Math.PI / 365 * (n + 10)) * toR;
+    const phi = NIGHT_LAT * toR;
+    let cosH = (Math.sin(-0.833 * toR) - Math.sin(phi) * Math.sin(decl)) / (Math.cos(phi) * Math.cos(decl));
+    cosH = Math.max(-1, Math.min(1, cosH));
+    const halfDayMs = Math.acos(cosH) / toR / 15 * 3600e3;
+    const B = 2 * Math.PI / 365 * (n - 81);
+    const eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B); // minutes
+    const noonClock = new Date(y, m - 1, d, 12, 0, 0);
+    // Solar noon ≈ 12:00 standard time (minus equation of time), +1h when daylight saving is in effect
+    const stdOffset = Math.max(new Date(y, 0, 1).getTimezoneOffset(), new Date(y, 6, 1).getTimezoneOffset());
+    const dstMin = stdOffset - noonClock.getTimezoneOffset();
+    const noon = noonClock.getTime() + (dstMin - eot) * 60000;
+    return { rise: noon - halfDayMs, set: noon + halfDayMs };
+  }
+
+  function nightInfo(nowArg) {
+    const now = nowArg || new Date();
+    const t = now.getTime();
+    const Y = now.getFullYear(), M = now.getMonth() + 1, D = now.getDate();
+    const dayShift = function (k) { const x = new Date(Y, M - 1, D + k, 12); return [x.getFullYear(), x.getMonth() + 1, x.getDate()]; };
+    const todaySun = sunTimes(Y, M, D);
+    let eve, set, rise, isNight;
+    if (t < todaySun.rise) {            // before dawn: we are in the night that began yesterday evening
+      eve = dayShift(-1);
+      set = sunTimes(eve[0], eve[1], eve[2]).set; rise = todaySun.rise; isNight = true;
+    } else {
+      eve = [Y, M, D];
+      const tm = dayShift(1);
+      set = todaySun.set; rise = sunTimes(tm[0], tm[1], tm[2]).rise;
+      isNight = t >= todaySun.set;
+    }
+    const civil = HS.engine.fromYmd(eve[0], eve[1], eve[2]);
+    const epag = !civil || civil.kind === "epagomenal";
+    const N = epag ? 36 : civil.decanId;  // decan of this 10-day week (Sopdet's set during the five days)
+    const len = (rise - set) / 12;
+    const hours = [];
+    for (let h = 1; h <= 12; h++) {
+      // hour 12 (last before dawn) = this week's decan; hours 1..11 = the 11 decans before it
+      const decanId = (((N - 12 + h - 1) % 36) + 36) % 36 + 1;
+      hours.push({ hour: h, decanId: decanId, start: set + (h - 1) * len, end: set + h * len });
+    }
+    const currentHour = isNight ? Math.min(12, Math.floor((t - set) / len) + 1) : null;
+    return { sunset: set, sunrise: rise, hourMs: len, hours: hours, currentHour: currentHour, weekDecan: N, epagomenal: epag, isNight: isNight };
+  }
+
+  function roundTime(ms) { return new Date(Math.round(ms / 300000) * 300000); }
+  function fmtTime(ms, short) {
+    const d = roundTime(ms);
+    let h = d.getHours();
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    const ap = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return short ? h + ":" + mm : h + ":" + mm + " " + ap;
+  }
+
+  function fmtRange(a, b) {
+    const x = fmtTime(a), y = fmtTime(b);
+    return x.slice(-2) === y.slice(-2) ? fmtTime(a, true) + "\u2013" + y : x + "\u2013" + y;
+  }
+
+  function renderNightWheel(n, natalId, selKey) {
+    const cx = 200, cy = 200;
+    const r = 96;                  // inner dial
+    const bIn = 102, bOut = 148;   // hour band
+    const rad = function (deg) { return deg * Math.PI / 180; };
+    const pt = function (rr, deg) { return [cx + Math.cos(rad(deg)) * rr, cy + Math.sin(rad(deg)) * rr]; };
+    const f = function (x) { return x.toFixed(1); };
+    const span = function (h) { const a0 = -90 + (h - 1) * 30; return [a0, a0 + 30]; };
+    function seg(r0, r1, a0, a1) {
+      const p1 = pt(r1, a0), p2 = pt(r1, a1), p3 = pt(r0, a1), p4 = pt(r0, a0);
+      return "M" + f(p1[0]) + " " + f(p1[1]) + " A" + r1 + " " + r1 + " 0 0 1 " + f(p2[0]) + " " + f(p2[1]) +
+        " L" + f(p3[0]) + " " + f(p3[1]) + " A" + r0 + " " + r0 + " 0 0 0 " + f(p4[0]) + " " + f(p4[1]) + " Z";
+    }
+    // text rotated along the ring, kept upright on the lower half
+    function arcText(rr, deg, str, attrs) {
+      const p = pt(rr, deg);
+      let rot = deg + 90;
+      if (Math.sin(rad(deg)) > 0.05) rot = deg - 90;
+      return '<text x="' + f(p[0]) + '" y="' + f(p[1]) + '" transform="rotate(' + f(rot) + " " + f(p[0]) + " " + f(p[1]) + ')" text-anchor="middle" dominant-baseline="central" ' + attrs + ">" + str + "</text>";
+    }
+    function shortName(s) { return s.length > 15 ? s.slice(0, 14) + "\u2026" : s; }
+    const parts = [];
+    const hits = [];
+    let youHour = null;
+    n.hours.forEach(function (hr) {
+      const sp = span(hr.hour);
+      const d = HS.engine.getDecan(hr.decanId) || {};
+      const isNow = hr.hour === n.currentHour, isYou = hr.decanId === natalId;
+      if (isYou) youHour = hr.hour;
+      // deeper blue toward the middle of the night
+      const depth = 1 - Math.abs(hr.hour - 6.5) / 5.5;
+      const fill = isNow ? "rgba(126,182,255,0.85)" : "rgba(" + Math.round(60 - 25 * depth) + "," + Math.round(90 - 35 * depth) + "," + Math.round(170 - 30 * depth) + "," + (hr.hour % 2 ? 0.55 : 0.42) + ")";
+      parts.push('<path d="' + seg(bIn, bOut, sp[0] + 0.8, sp[1] - 0.8) + '" fill="' + fill + '"' +
+        (isYou ? ' stroke="#d4af37" stroke-width="2"' : "") + "/>");
+      const mid = sp[0] + 15;
+      const ink = isNow ? "#0b1020" : "#ffffff";
+      parts.push(arcText(136, mid, String(hr.hour), 'font-size="13" font-weight="700" font-family="system-ui" fill="' + ink + '"'));
+      parts.push(arcText(122, mid, escapeHtml(shortName(d.egyptianName || "")), 'font-size="7.2" font-family="system-ui" fill="' + (isNow ? "#0b1020" : "rgba(232,212,139,0.95)") + '"'));
+      parts.push(arcText(111, mid, "decan " + hr.decanId, 'font-size="6.3" font-family="system-ui" fill="' + (isNow ? "rgba(11,16,32,0.8)" : "rgba(255,255,255,0.55)") + '"'));
+      // boundary tick + start time (hour 1 start is the sunset label at the top)
+      if (hr.hour > 1) {
+        const t1 = pt(bOut + 1, sp[0]), t2 = pt(bOut + 7, sp[0]);
+        parts.push('<line x1="' + f(t1[0]) + '" y1="' + f(t1[1]) + '" x2="' + f(t2[0]) + '" y2="' + f(t2[1]) + '" stroke="rgba(255,255,255,0.55)" stroke-width="1"/>');
+        const cs = Math.cos(rad(sp[0]));
+        const side = Math.abs(cs) > 0.8;
+        const lp = pt(side ? bOut + 10 : bOut + 17, sp[0]);
+        parts.push('<text x="' + f(lp[0]) + '" y="' + f(lp[1] + 3) + '" text-anchor="' + (side ? (cs > 0 ? "start" : "end") : "middle") + '" font-size="9" font-family="system-ui" fill="rgba(255,255,255,0.8)">' + fmtTime(hr.start, true) + "</text>");
+      }
+      const key = "h:" + hr.hour;
+      hits.push('<g class="whit' + (selKey === key ? " selected" : "") + '" data-wsel="' + key + '" tabindex="0" role="button" aria-label="' +
+        escapeHtml("Night hour " + hr.hour + ", " + (d.egyptianName || "") + ", decan " + hr.decanId + ", about " + fmtTime(hr.start) + " to " + fmtTime(hr.end) + "." + (isNow ? " Up now." : "")) + '">' +
+        '<path class="whit-area" d="' + seg(34, 172, sp[0], sp[1]) + '"/>' +
+        '<path class="wsel-ring" d="' + seg(bIn - 3, bOut + 3, sp[0] + 0.4, sp[1] - 0.4) + '"/>' +
+        "</g>");
+    });
+    // sunset / sunrise seam at the top
+    const s1 = pt(bIn - 4, -90), s2 = pt(bOut + 8, -90);
+    parts.push('<line x1="' + f(s1[0]) + '" y1="' + f(s1[1]) + '" x2="' + f(s2[0]) + '" y2="' + f(s2[1]) + '" stroke="#e8d48b" stroke-width="2"/>');
+    parts.push('<text x="206" y="28" text-anchor="start" font-size="8.5" font-family="system-ui" fill="#e8d48b">Sunset \u2192</text>' +
+      '<text x="206" y="40" text-anchor="start" font-size="9.5" font-weight="600" font-family="system-ui" fill="#fff4c2">' + fmtTime(n.sunset) + "</text>" +
+      '<text x="194" y="28" text-anchor="end" font-size="8.5" font-family="system-ui" fill="#e8d48b">\u2190 Sunrise</text>' +
+      '<text x="194" y="40" text-anchor="end" font-size="9.5" font-weight="600" font-family="system-ui" fill="#fff4c2">' + fmtTime(n.sunrise) + "</text>");
+    function marker(h, color, label) {
+      if (h == null) return "";
+      const p = pt(r - 26, span(h)[0] + 15);
+      return '<circle cx="' + f(p[0]) + '" cy="' + f(p[1]) + '" r="7" fill="' + color + '" stroke="#070b16" stroke-width="2"/>' +
+        '<text x="' + f(p[0]) + '" y="' + f(p[1] + 19) + '" text-anchor="middle" fill="' + color + '" font-size="9.5" font-family="system-ui">' + label + "</text>";
+    }
+    const same = youHour != null && youHour === n.currentHour;
+    const mins = Math.round(n.hourMs / 60000);
+    return '<svg class="wheel wheel-night" viewBox="0 0 400 400" role="group" aria-label="Tonight\u2019s 12 night hours and their hour-stars. Tap an hour for details.">' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + (bOut + 2) + '" fill="rgba(4,8,22,0.35)"/>' +
+      parts.join("") +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="rgba(0,0,0,0.3)" stroke="rgba(126,182,255,0.35)" stroke-width="2"/>' +
+      marker(youHour, "#d4af37", same ? "You / Now" : "You") +
+      (same ? "" : marker(n.currentHour, "#7eb6ff", "Now")) +
+      '<text x="' + cx + '" y="' + (cy - 8) + '" text-anchor="middle" fill="rgba(232,212,139,0.95)" font-size="15" font-family="Georgia,serif">Tonight</text>' +
+      '<text x="' + cx + '" y="' + (cy + 7) + '" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="8" font-family="system-ui">12 hour-stars</text>' +
+      '<text x="' + cx + '" y="' + (cy + 19) + '" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-size="7.5" font-family="system-ui">hours of ~' + mins + " min</text>" +
+      hits.join("") +
+      "</svg>";
+  }
+
+  // ---------- Wheel block: toggle + wheel + info card ----------
+  function defaultWheelSel(today) {
+    if (state.wheelMode === "night") {
+      const n = nightInfo();
+      return "h:" + (n.currentHour || 1);
+    }
+    return today.decanId ? "d:" + today.decanId : "e";
+  }
+
+  function wheelBlockHtml() {
+    const today = HS.engine.today();
+    const natal = state.chart.civil;
+    if (!state.wheelSel) state.wheelSel = defaultWheelSel(today);
+    const night = state.wheelMode === "night";
+    const toggle =
+      '<div class="wheel-toggle" role="group" aria-label="Wheel mode">' +
+      '<button type="button" data-wmode="year" aria-pressed="' + (!night) + '"' + (!night ? ' class="on"' : "") + ">The year</button>" +
+      '<button type="button" data-wmode="night" aria-pressed="' + night + '"' + (night ? ' class="on"' : "") + ">Tonight\u2019s hours</button>" +
+      "</div>";
+    if (!night) {
+      return toggle +
+        '<p class="wheel-hint">Tap any decan on the wheel to read about it.</p>' +
+        '<div class="wheel-wrap">' + renderWheel(natal.decanId, today.decanId, state.wheelSel) + "</div>" +
+        '<div class="wheel-card" id="wheel-card" aria-live="polite">' + wheelCardHtml(state.wheelSel) + "</div>";
+    }
+    const n = nightInfo();
+    const opener = HS.engine.getDecan(n.hours[0].decanId) || {};
+    const cur = n.currentHour ? n.hours[n.currentHour - 1] : null;
+    const curD = cur ? (HS.engine.getDecan(cur.decanId) || {}) : null;
+    const status = cur
+      ? 'Up now: <strong>hour ' + cur.hour + " of 12</strong> \u2014 " + escapeHtml(curD.egyptianName) + " (decan " + cur.decanId + "), until about " + fmtTime(cur.end) + "."
+      : "It\u2019s daytime. Tonight opens at about <strong>" + fmtTime(n.sunset) + "</strong> with " + escapeHtml(opener.egyptianName) + " (decan " + n.hours[0].decanId + ").";
+    return toggle +
+      '<p class="wheel-hint night">' + status + "</p>" +
+      '<div class="wheel-wrap">' + renderNightWheel(n, natal.decanId, state.wheelSel) + "</div>" +
+      '<div class="wheel-card" id="wheel-card" aria-live="polite">' + wheelCardHtml(state.wheelSel) + "</div>" +
+      '<div class="night-method">' +
+      '<div class="badge-row" style="justify-content:flex-start;margin-bottom:6px"><span class="badge parlor">Simplified reconstruction</span></div>' +
+      '<p class="tiny muted">Egyptian diagonal star clocks split the night into 12 hours, each marked by a decan rising in the east, and the list shifted by one star every 10 days. Here the decan of the current 10-day week (the star newly reborn at dawn) marks the last hour, and the 11 decans before it mark hours 1\u201311. Hours are equal twelfths of sunset to sunrise, estimated from the date alone for about 40\u00b0N (no location used), so clock times can be off by a half hour or more. Real tables varied by era and list.' +
+      (n.epagomenal ? " During the five days upon the year the real clocks used extra \u201ctriangle\u201d decans such as Shetwy, the two tortoises; this wheel shows Sopdet\u2019s set instead." : "") +
+      "</p></div>";
+  }
+
+  function wheelCardHtml(key) {
+    const today = HS.engine.today();
+    const natal = state.chart ? state.chart.civil : {};
+    if (key === "e") {
+      const ep = HS.data.epagomenal || {};
+      const days = ep.days || [];
+      return '<div class="wc-kicker">New Year seam \u00b7 ' + escapeHtml((ep.convention && ep.convention.gregorian) || "Jul 14 \u2013 Jul 18") + "</div>" +
+        '<h3 class="wc-name">' + escapeHtml(ep.egyptianName || "Heriu Renpet") + "</h3>" +
+        '<p class="wc-trans">' + escapeHtml(ep.translation || "") + "</p>" +
+        '<ul class="wc-days">' + days.map(function (d) {
+          return "<li><span>" + escapeHtml(d.gregorianApprox) + "</span> " + escapeHtml(d.translation) + "</li>";
+        }).join("") + "</ul>" +
+        '<div class="badge-row wc-badges"><span class="badge epag">Outside the 36 decans</span>' +
+        (today.kind === "epagomenal" ? '<span class="badge now">Now</span>' : "") +
+        (natal.kind === "epagomenal" ? '<span class="badge you">You</span>' : "") + "</div>" +
+        '<button class="btn small" data-go="learn" data-learn="epag">Read about the five days \u2192</button>';
+    }
+    let hourInfo = null;
+    let id = null;
+    if (/^h:\d+$/.test(key || "")) {
+      const n = nightInfo();
+      hourInfo = n.hours[Number(key.slice(2)) - 1];
+      if (!hourInfo) return "";
+      id = hourInfo.decanId;
+      hourInfo.isNow = n.currentHour === hourInfo.hour;
+    } else if (/^d:\d+$/.test(key || "")) {
+      id = Number(key.slice(2));
+    }
+    const d = id ? HS.engine.getDecan(id) : null;
+    if (!d) return "";
+    const kicker = hourInfo
+      ? "Night hour " + hourInfo.hour + " of 12 \u00b7 about " + fmtRange(hourInfo.start, hourInfo.end)
+      : "Decan " + d.id + " of 36 \u00b7 " + d.season + (seasonGloss(d.season) ? " (" + seasonGloss(d.season) + ")" : "");
+    const dates = hourInfo
+      ? '<p class="wc-dates">Decan ' + d.id + ' \u00b7 its own 10-day week: <strong>' + escapeHtml(d.gregorianApprox) + "</strong> \u00b7 " + escapeHtml(d.season) + "</p>"
+      : '<p class="wc-dates"><strong>' + escapeHtml(d.gregorianApprox) + "</strong> \u00b7 days " + d.startDayOfYear + "\u2013" + d.endDayOfYear + " of the Egyptian year</p>";
+    const isNow = hourInfo ? hourInfo.isNow : d.id === today.decanId;
+    const nowLabel = hourInfo ? "Up now" : "Sky now";
+    return '<div class="wc-kicker">' + escapeHtml(kicker) + "</div>" +
+      '<h3 class="wc-name">' + escapeHtml(d.egyptianName) + "</h3>" +
+      '<p class="wc-trans">' + escapeHtml(d.translation) + "</p>" +
+      dates +
+      '<p class="wc-theme">' + escapeHtml(d.theme) + "</p>" +
+      '<div class="badge-row wc-badges"><span class="badge ' + seasonClass(d.season) + '">' + escapeHtml(d.season) + "</span>" +
+      (isNow ? '<span class="badge now">' + nowLabel + "</span>" : "") +
+      (d.id === natal.decanId ? '<span class="badge you">Your natal decan</span>' : "") + "</div>" +
+      '<button class="btn small" data-decan="' + d.id + '">Open full decan page \u2192</button>';
+  }
+
+  function seasonGloss(season) {
+    return season === "Akhet" ? "Flood" : season === "Peret" ? "Growing" : season === "Shemu" ? "Harvest" : "";
+  }
+
+  function selectWheel(key) {
+    state.wheelSel = key;
+    $$(".wheel .whit").forEach(function (g) {
+      const on = g.getAttribute("data-wsel") === key;
+      g.classList.toggle("selected", on);
+      g.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    const card = $("#wheel-card");
+    if (card) card.innerHTML = wheelCardHtml(key);
+  }
+
+  function rerenderWheelBlock() {
+    const blk = $("#wheel-block");
+    if (blk && state.chart) blk.innerHTML = wheelBlockHtml();
   }
 
   function dailyBlend(natalCivil, todayCivil, aspect) {
@@ -2665,7 +3034,7 @@ window.HS_DATA = {
       '<div class="side"><div class="lbl">Sky now</div><div class="nm">' + escapeHtml(signTitle(today)) + "</div>" +
       '<div class="tiny muted">' + escapeHtml(signTheme(today)) + "</div></div>" +
       "</div>" +
-      '<div class="wheel-wrap">' + renderWheel(natal.decanId, today.decanId) + "</div>" +
+      '<div id="wheel-block">' + wheelBlockHtml() + "</div>" +
       '<div class="aspect-meta">' +
       '<p class="aspect-name tone-' + escapeHtml(blend.tone) + '">' + escapeHtml(blend.headline) + "</p>" +
       '<p class="small muted">' + escapeHtml(blend.body) + "</p>" +
@@ -2778,8 +3147,38 @@ window.HS_DATA = {
         renderLearn();
         return;
       }
+      const wm = ev.target.closest("[data-wmode]");
+      if (wm) {
+        if (state.wheelMode !== wm.dataset.wmode) {
+          state.wheelMode = wm.dataset.wmode;
+          state.wheelSel = null;
+          rerenderWheelBlock();
+        }
+        return;
+      }
+      const ws = ev.target.closest("[data-wsel]");
+      if (ws) {
+        selectWheel(ws.getAttribute("data-wsel"));
+        return;
+      }
       const g = ev.target.closest("[data-decan]");
       if (g) openDecanModal(g.dataset.decan);
+    });
+    document.body.addEventListener("keydown", function (ev) {
+      const ws = ev.target.closest && ev.target.closest(".whit[data-wsel]");
+      if (!ws) return;
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        selectWheel(ws.getAttribute("data-wsel"));
+      } else if (ev.key === "ArrowRight" || ev.key === "ArrowLeft" || ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+        ev.preventDefault();
+        const all = $$(".wheel .whit");
+        const i = all.indexOf(ws);
+        const step = (ev.key === "ArrowRight" || ev.key === "ArrowDown") ? 1 : -1;
+        const next = all[(i + step + all.length) % all.length];
+        next.focus();
+        selectWheel(next.getAttribute("data-wsel"));
+      }
     });
     $("#birth-form").addEventListener("submit", onFindSubmit);
     $("#birth-month").addEventListener("change", populateDays);
